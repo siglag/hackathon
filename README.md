@@ -13,6 +13,25 @@ Desktop UI ─────────────┼─> API (FastAPI :8600) �
                         │               (the ONLY process with internet egress)
 ```
 
+## Branch `deepseek-openrouter` (experimental, CLOUD model)
+
+On this branch, `scripts/run.sh` replaces local Qwen with **DeepSeek V4.1 Flash 1017** (`deepseek/deepseek-v4.1-flash-1017`) via OpenRouter.
+
+> **This breaks the spec's core privacy rule (§4).** Every model call (record text, questions, extracted values, case data in prompts) goes to OpenRouter and the upstream provider. Use synthetic data only.
+
+Safeguards that remain:
+
+* The API refuses to start with `MEDASSIST_LLM_PROVIDER=openrouter` unless `MEDASSIST_ALLOW_CLOUD_MODEL=1` is set. `run.sh` sets both on this branch.
+* The UI shows a red "CLOUD MODEL" banner.
+* The egress guard allows only `openrouter.ai`, in addition to local addresses.
+* Requests ask OpenRouter for `data_collection: deny`. That is a routing policy, not a guarantee.
+* OCR, storage, and the PubMed gateway still run locally, unchanged.
+
+The key is read from `MEDASSIST_OPENROUTER_API_KEY` or `~/.local/share/medassist/openrouter.key` (mode 600). It is never stored in the repo.
+Go back to local Qwen with `LLM=ollama scripts/run.sh`.
+
+A/B harness: `backend/.venv/bin/python -I scripts/ab_test.py`. Results go to `ab_results/REPORT.md`.
+
 ## Quick start (WSL + Ollama on Windows)
 
 ```bash
