@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import DOMPurify from "dompurify";
-import { marked } from "marked";
 import { get, newKey, post } from "../api";
+import { renderMarkdown, sanitize } from "../markdown";
 import type { Artifact, Dataset, Doc, Selection } from "../types";
 import type { Items } from "../App";
 import TableView from "./TableView";
@@ -172,7 +171,7 @@ function ArtifactView({ id, onSelect }: { id: string; onSelect: (s: Selection) =
         </div>
       )}
       {p.kind === "report" && a.format === "md" && p.markdown && (
-        <div className="report" dangerouslySetInnerHTML={{ __html: sanitize(marked.parse(p.markdown, { async: false }) as string) }} />
+        <div className="report" dangerouslySetInnerHTML={{ __html: renderMarkdown(p.markdown) }} />
       )}
       {p.kind === "report" && a.format !== "md" && p.html && (
         <>
@@ -184,17 +183,6 @@ function ArtifactView({ id, onSelect }: { id: string; onSelect: (s: Selection) =
   );
 }
 
-function sanitize(html: string): string {
-  // External links open only on click, without referrer; no remote images.
-  const clean = DOMPurify.sanitize(html, { FORBID_TAGS: ["img", "iframe", "style", "form", "video", "audio", "object", "embed"], FORBID_ATTR: ["style", "srcset"] });
-  const div = document.createElement("div");
-  div.innerHTML = clean;
-  div.querySelectorAll("a").forEach((el) => {
-    el.setAttribute("target", "_blank");
-    el.setAttribute("rel", "noopener noreferrer");
-  });
-  return div.innerHTML;
-}
 
 function DocumentView({ id, onSelect, onChanged }: { id: string; onSelect: (s: Selection) => void; onChanged: () => void }) {
   const [d, setD] = useState<any>(null);
