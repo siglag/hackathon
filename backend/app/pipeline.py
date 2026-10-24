@@ -69,11 +69,17 @@ def _ocr_page(ctx: JobContext, png: bytes, page_no: int, total: int) -> list[dic
         return ocr.recognize_png(png)
     except ocr.OCRUnavailable as e:
         raise JobError(f"{e} The original is stored; you can transcribe values manually.") from None
+    except Cancelled:
+        raise
+    except MemoryError:
+        log.error("ocr out of memory page=%s", page_no)
+        raise JobError("OCR ran out of memory on this page. Lower MEDASSIST_OCR_MAX_SIDE or split the file. "
+                       "The original is stored; retry afterwards.") from None
     except Exception as e:  # noqa: BLE001 - engine/model loading failures
-        if isinstance(e, Cancelled):
-            raise
-        # Engine errors carry model/file paths, not record content; keep the cause so failures can be diagnosed.
-        log.exception("ocr failed job=%s page=%s", ctx.id, page_no)
+        log.error("ocr failed job=%s page=%s err=%s", ctx.id, page_no, type(e).__name__)
+        if settings.ocr_engine == "openrouter":
+            raise JobError(f"Cloud OCR failed ({type(e).__name__}). Check the OpenRouter connection and OCR model configuration. "
+                           "The original is stored; retry or transcribe manually.") from None
         if isinstance(e, netguard.EgressBlocked):
             raise JobError("OCR models are not in the local cache, and the API may not download them. "
                            "Run scripts/setup_models.py as the same user that runs the API, then retry.") from None

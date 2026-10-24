@@ -112,7 +112,7 @@ export default function CapturePage() {
       const blobs = await Promise.all(pages.map(render));
       const files = blobs.map((b, i) => new File([b], `page-${i + 1}.jpg`, { type: "image/jpeg" }));
       const r = await uploadFiles("/api/phone/uploads", files, setProgress, newKey());
-      setMsg(`Uploaded ${r.documents.length} page(s). They are processing on the workstation.`);
+      setMsg(`Uploaded ${r.documents.length} page(s). They are queued for processing.`);
       pages.forEach((p) => URL.revokeObjectURL(p.url));
       setPages([]);
       const s = await get("/api/phone/session");

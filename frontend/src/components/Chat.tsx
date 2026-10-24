@@ -3,6 +3,7 @@ import { get, newKey, post, STAGE_LABEL, uploadFiles, watchJob } from "../api";
 import type { Message, Selection } from "../types";
 import type { Items } from "../App";
 import MessageView from "./MessageView";
+import { ArrowUpIcon, PlusIcon, StopIcon } from "./icons";
 
 type JobInfo = { id: string; kind: string; state: string; stage: string; detail?: string; error?: string | null; label?: string };
 
@@ -20,6 +21,7 @@ export default function Chat({ caseId, conversationId, items, onItemsChanged, on
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
   const watchers = useRef<Record<string, () => void>>({});
 
   const loadMessages = useCallback(async () => {
@@ -103,10 +105,60 @@ export default function Chat({ caseId, conversationId, items, onItemsChanged, on
 
   const active = Object.values(jobs).filter((j) => j.state === "running" || j.state === "queued");
   const failedUploads = Object.values(jobs).filter((j) => j.kind === "ingest" && (j.state === "failed" || j.state === "interrupted"));
+  const replying = active.find((j) => j.kind === "chat" || j.kind === "evidence_answer");
+  const isEmpty = messages.length === 0 && active.length === 0 && failedUploads.length === 0;
+
+  // Grow the textarea with its content, up to a cap, like ChatGPT's composer.
+  useEffect(() => {
+    const el = input.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+  }, [text]);
+
+  const composer = (
+    <div className="composer-wrap">
+      {error && <div className="error">{error}</div>}
+      <form className="composer" onSubmit={(e) => {
+        e.preventDefault();
+        sendMessage();
+      }}>
+        <label className="icon-btn attach" title="Add photos and files">
+          <PlusIcon />
+          <input type="file" multiple hidden accept=".jpg,.jpeg,.png,.pdf,.xlsx,.csv,.tsv,.json,image/*"
+            onChange={(e) => {
+              upload(Array.from(e.target.files ?? []));
+              e.target.value = "";
+            }} />
+        </label>
+        <textarea
+          ref={input}
+          value={text}
+          placeholder="Ask anything about this case"
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+              e.preventDefault();
+              sendMessage();
+            }
+          }}
+          rows={1}
+          autoFocus
+        />
+        {replying && !text.trim() ? (
+          <button type="button" className="send" title="Stop" onClick={() => post(`/api/jobs/${replying.id}/cancel`)}><StopIcon /></button>
+        ) : (
+          <button className="send" title="Send" disabled={!text.trim()}><ArrowUpIcon size={18} /></button>
+        )}
+        {uploading !== null && <div className="upload-bar"><div style={{ width: `${Math.round(uploading * 100)}%` }} /></div>}
+      </form>
+      {!isEmpty && <div className="disclaimer">Medical Assistant can make mistakes. Drafts need clinician review.</div>}
+    </div>
+  );
 
   return (
     <section
-      className={`chat ${dragOver ? "drag" : ""}`}
+      className={`chat ${dragOver ? "drag" : ""} ${isEmpty ? "is-empty" : ""}`}
       onDragOver={(e) => {
         e.preventDefault();
         setDragOver(true);
@@ -118,91 +170,74 @@ export default function Chat({ caseId, conversationId, items, onItemsChanged, on
         upload(Array.from(e.dataTransfer.files));
       }}
     >
-      <div className="messages">
-        {messages.length === 0 && (
-          <div className="empty">
-            <h2>Nothing logged yet</h2>
-            <p>This case has no conversation yet. The usual order:</p>
-            <ol>
-              <li><span className="n">01</span><div><strong>Add records</strong>
-                <span className="d">Drop a photo, PDF, XLSX, CSV or JSON here, or use “Scan with phone” above.</span></div></li>
-              <li><span className="n">02</span><div><strong>Review the extraction</strong>
-                <span className="d">Check medication names, doses, lab values, units and dates before you use them.</span></div></li>
-              <li><span className="n">03</span><div><strong>Ask or export</strong>
-                <span className="d">Literature searches show you the outgoing topic first and never include patient details.</span></div></li>
-            </ol>
-            <div className="try">
-              <span className="muted small">Try</span>
-              {["Create an Excel sheet from the reviewed labs", "Sort by collection date"].map((s) => (
-                <button key={s} className="chip link" onClick={() => setText(s)}>{s}</button>
+      {isEmpty ? (
+        <div className="hero">
+          <h1>What can I help with?</h1>
+          {composer}
+          <div className="suggestions">
+            {SUGGESTIONS.map((s) => (
+              <button key={s} className="suggestion" onClick={() => {
+                setText(s);
+                input.current?.focus();
+              }}>{s}</button>
+            ))}
+          </div>
+          <p className="muted small">Drop records anywhere (photo, PDF, XLSX, CSV, JSON) or scan them with your phone.
+            Literature searches need your approval and never include patient details.</p>
+        </div>
+      ) : (
+        <>
+          <div className="messages">
+            <div className="thread">
+              {messages.map((m) => (
+                <MessageView key={m.id} m={m} job={m.job_id ? jobs[m.job_id] : undefined} items={items}
+                  onSelect={onSelect} onTrack={track} onChanged={loadMessages}
+                  onRetry={async (jid) => {
+                    await post(`/api/jobs/${jid}/retry`);
+                    delete watchers.current[jid];
+                    track(jid, jobs[jid]?.kind ?? "chat");
+                  }} />
               ))}
+              {active.map((j) => (
+                <div key={j.id} className="msg assistant">
+                  <div className="thinking">
+                    <span className="shimmer">
+                      {j.label ? `${j.label}: ` : ""}
+                      {STAGE_LABEL[j.stage] ?? j.stage}
+                      {j.detail ? ` — ${j.detail}` : ""}
+                    </span>
+                    {j.kind !== "chat" && <button className="text-btn" onClick={() => post(`/api/jobs/${j.id}/cancel`)}>Cancel</button>}
+                  </div>
+                </div>
+              ))}
+              {failedUploads.map((j) => (
+                <div key={j.id} className="msg assistant">
+                  <div className="notice bad">
+                    <span>Processing failed{j.label ? ` (${j.label})` : ""}: {j.error}</span>
+                    <div className="row gap-sm">
+                      <button className="small" onClick={async () => {
+                        await post(`/api/jobs/${j.id}/retry`);
+                        delete watchers.current[j.id];
+                        track(j.id, "ingest", j.label);
+                      }}>Retry</button>
+                      <button className="small" onClick={() => setJobs((x) => ({ ...x, [j.id]: { ...x[j.id], state: "dismissed" } }))}>Dismiss</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div ref={bottom} />
             </div>
           </div>
-        )}
-        {messages.map((m) => (
-          <MessageView key={m.id} m={m} job={m.job_id ? jobs[m.job_id] : undefined} items={items}
-            onSelect={onSelect} onTrack={track} onChanged={loadMessages}
-            onRetry={async (jid) => {
-              await post(`/api/jobs/${jid}/retry`);
-              delete watchers.current[jid];
-              track(jid, jobs[jid]?.kind ?? "chat");
-            }} />
-        ))}
-        {active.map((j) => (
-          <div key={j.id} className="job-progress">
-            <span className="spinner" />
-            <span>
-              {j.label ? <strong>{j.label}: </strong> : null}
-              {STAGE_LABEL[j.stage] ?? j.stage}
-              {j.detail ? ` — ${j.detail}` : ""}
-            </span>
-            <button className="small" onClick={() => post(`/api/jobs/${j.id}/cancel`)}>Cancel</button>
-          </div>
-        ))}
-        {failedUploads.map((j) => (
-          <div key={j.id} className="job-progress failed">
-            <span>Processing failed{j.label ? ` (${j.label})` : ""}: {j.error}</span>
-            <button className="small" onClick={async () => {
-              await post(`/api/jobs/${j.id}/retry`);
-              delete watchers.current[j.id];
-              track(j.id, "ingest", j.label);
-            }}>Retry</button>
-            <button className="small" onClick={() => setJobs((x) => ({ ...x, [j.id]: { ...x[j.id], state: "dismissed" } }))}>Dismiss</button>
-          </div>
-        ))}
-        <div ref={bottom} />
-      </div>
-      {error && <div className="error">{error}</div>}
-      <div className="composer-wrap">
-        {uploading !== null && <div className="upload-bar"><div style={{ width: `${Math.round(uploading * 100)}%` }} /></div>}
-        <div className="composer">
-          <textarea
-            value={text}
-            placeholder="Ask about this case's records, or request a table or file"
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }}
-            rows={2}
-          />
-          <div className="composer-foot">
-            <label className="button attach" title="Attach files">
-              Attach records
-              <input type="file" multiple hidden accept=".jpg,.jpeg,.png,.pdf,.xlsx,.csv,.tsv,.json,image/*"
-                onChange={(e) => {
-                  upload(Array.from(e.target.files ?? []));
-                  e.target.value = "";
-                }} />
-            </label>
-            <span className="grow" />
-            <span className="hint"><kbd>Enter</kbd> send · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line</span>
-            <button className="primary small" onClick={sendMessage} disabled={!text.trim()}>Send</button>
-          </div>
-        </div>
-      </div>
+          {composer}
+        </>
+      )}
     </section>
   );
 }
+
+const SUGGESTIONS = [
+  "Create an Excel sheet from the reviewed labs",
+  "Sort the lab table by collection date",
+  "Summarize the latest records in this case",
+  "What does recent evidence say about this condition?",
+];

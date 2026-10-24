@@ -129,3 +129,16 @@ def test_mcp_client_refuses_non_allowlisted_hosts_and_tools():
     m = MCPClient("https://pubmed.caseyjhand.com/mcp", ("pubmed.caseyjhand.com",), 5, 1000)
     with pytest.raises(MCPError):
         m.call("pubmed_format_citations", {})
+
+
+def test_status_identifies_cloud_ocr_independently_of_chat(monkeypatch):
+    from dataclasses import replace
+    from app import main
+
+    monkeypatch.setattr(main, "settings", replace(main.settings, ocr_engine="openrouter"))
+    monkeypatch.setattr(main.ocr, "available", lambda: (True, "openrouter:synthetic-vision"))
+    monkeypatch.setattr(main.llm, "status", lambda: {"ok": True, "cloud": False, "model": "local"})
+    response = c.get("/api/system/status")
+    assert response.status_code == 200
+    assert response.json()["ocr"] == {"ok": True, "engine": "openrouter:synthetic-vision", "cloud": True}
+    assert response.json()["model"]["cloud"] is False

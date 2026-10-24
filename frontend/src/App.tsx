@@ -6,6 +6,7 @@ import Chat from "./components/Chat";
 import ArtifactPanel from "./components/ArtifactPanel";
 import PairPhone from "./components/PairPhone";
 import StatusBar from "./components/StatusBar";
+import { FilesIcon, LogoIcon, NewChatIcon, PhoneIcon, SidebarIcon } from "./components/icons";
 
 type AuthState = { setup_needed: boolean; authenticated: boolean; kind: string | null };
 
@@ -17,7 +18,7 @@ export default function App() {
   useEffect(() => {
     refreshAuth();
   }, [refreshAuth]);
-  if (!auth) return <div className="center muted">Loading…</div>;
+  if (!auth) return <div className="center muted"><span className="spinner" /></div>;
   if (!auth.authenticated || auth.kind !== "doctor") return <Login setup={auth.setup_needed} onDone={refreshAuth} />;
   return <Workspace onLogout={refreshAuth} />;
 }
@@ -37,23 +38,19 @@ function Login({ setup, onDone }: { setup: boolean; onDone: () => void }) {
     }
   };
   return (
-    <div className="center">
-      <form className="card login" onSubmit={submit}>
-        <p className="kicker">Local workstation</p>
-        <h1>Medical Assistant</h1>
-        <p className="muted" style={{ margin: 0 }}>{setup ? "Create the doctor account for this workstation." : "Sign in to continue."}</p>
-        <label>
-          Username
-          <input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" required />
-        </label>
-        <label>
-          Password {setup && <span className="muted">(min. 10 characters)</span>}
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-            autoComplete={setup ? "new-password" : "current-password"} required />
-        </label>
+    <div className="auth">
+      <div className="auth-logo"><LogoIcon size={32} /></div>
+      <form className="auth-form" onSubmit={submit}>
+        <h1>{setup ? "Create your account" : "Welcome back"}</h1>
+        <p className="muted">{setup ? "Set up the doctor account for this workstation." : "Sign in to this workstation."}</p>
+        <input placeholder="Username" aria-label="Username" value={username} onChange={(e) => setUsername(e.target.value)}
+          autoComplete="username" required />
+        <input type="password" placeholder={setup ? "Password (min. 10 characters)" : "Password"} aria-label="Password"
+          value={password} onChange={(e) => setPassword(e.target.value)}
+          autoComplete={setup ? "new-password" : "current-password"} required />
         {err && <div className="error">{err}</div>}
-        <button className="primary">{setup ? "Create account" : "Sign in"}</button>
-        <p className="muted small fineprint">Records and OCR are processed on this workstation.</p>
+        <button className="primary big">{setup ? "Create account" : "Continue"}</button>
+        <p className="muted small">Records are stored on this workstation. Cloud chat and OCR send content to OpenRouter. Use synthetic data only.</p>
       </form>
     </div>
   );
@@ -66,6 +63,8 @@ function Workspace({ onLogout }: { onLogout: () => void }) {
   const [convId, setConvId] = useState<string | null>(null);
   const [items, setItems] = useState<Items>({ documents: [], datasets: [], artifacts: [] });
   const [selection, setSelection] = useState<Selection | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => safeGet("sidebarOpen") !== "0" && window.innerWidth > 900);
   const [pairing, setPairing] = useState(false);
   const [panelWidth, setPanelWidth] = useState(() => Number(safeGet("panelWidth")) || 560);
   const dragging = useRef(false);
@@ -92,6 +91,7 @@ function Workspace({ onLogout }: { onLogout: () => void }) {
   useEffect(() => {
     if (!caseId) return;
     setSelection(null);
+    setPanelOpen(false);
     get(`/api/cases/${caseId}`).then((c) => {
       setConvs(c.conversations);
       setConvId(c.conversations[c.conversations.length - 1]?.id ?? null);
@@ -105,10 +105,25 @@ function Workspace({ onLogout }: { onLogout: () => void }) {
     return () => clearInterval(t);
   }, [loadItems]);
 
+  // Like a canvas: opening an item slides the side panel in.
+  const select = useCallback((s: Selection | null) => {
+    setSelection(s);
+    if (s) setPanelOpen(true);
+  }, []);
+
+  const toggleSidebar = () => {
+    setSidebarOpen((o) => {
+      safeSet("sidebarOpen", o ? "0" : "1");
+      return !o;
+    });
+  };
+  const closeSidebarOnMobile = () => window.innerWidth <= 900 && setSidebarOpen(false);
+
   const createCase = async (label: string) => {
     const c = await post("/api/cases", { label });
     await loadCases();
     setCaseId(c.id);
+    closeSidebarOnMobile();
   };
   const newConversation = async () => {
     if (!caseId) return;
@@ -116,9 +131,11 @@ function Workspace({ onLogout }: { onLogout: () => void }) {
     const full = await get(`/api/cases/${caseId}`);
     setConvs(full.conversations);
     setConvId(c.id);
+    closeSidebarOnMobile();
   };
 
   const activeCase = cases.find((c) => c.id === caseId) ?? null;
+  const pendingReview = items.documents.filter((d) => d.unreviewed_critical > 0).length;
 
   const onDrag = (e: React.PointerEvent) => {
     if (!dragging.current) return;
@@ -127,14 +144,20 @@ function Workspace({ onLogout }: { onLogout: () => void }) {
   };
 
   return (
-    <div className="app" onPointerMove={onDrag} onPointerUp={() => {
+    <div className={`app ${sidebarOpen ? "" : "sidebar-closed"}`} onPointerMove={onDrag} onPointerUp={() => {
       if (dragging.current) safeSet("panelWidth", String(panelWidth));
       dragging.current = false;
     }}>
+      {sidebarOpen && <div className="scrim" onClick={toggleSidebar} />}
       <Sidebar
+        open={sidebarOpen}
+        onToggle={toggleSidebar}
         cases={cases}
         activeCaseId={caseId}
-        onSelectCase={setCaseId}
+        onSelectCase={(id) => {
+          setCaseId(id);
+          closeSidebarOnMobile();
+        }}
         onCreateCase={createCase}
         onCaseDeleted={async () => {
           const cs = await loadCases();
@@ -143,7 +166,10 @@ function Workspace({ onLogout }: { onLogout: () => void }) {
         }}
         conversations={convs}
         activeConvId={convId}
-        onSelectConv={setConvId}
+        onSelectConv={(id) => {
+          setConvId(id);
+          closeSidebarOnMobile();
+        }}
         onNewConv={newConversation}
         onLogout={async () => {
           await post("/api/auth/logout");
@@ -151,41 +177,63 @@ function Workspace({ onLogout }: { onLogout: () => void }) {
         }}
       />
       <main className="main">
-        {activeCase ? (
-          <>
-            <header className="case-bar">
-              <div>
-                <span className="case-kicker">Case file</span>
-                <strong className="case-label">{activeCase.label}</strong>
-              </div>
-              <div className="row gap wrap">
-                <StatusBar />
-                <button onClick={() => setPairing(true)}>Scan with phone</button>
-              </div>
-            </header>
-            {convId && (
-              <Chat
-                key={convId}
-                caseId={activeCase.id}
-                conversationId={convId}
-                items={items}
-                onItemsChanged={loadItems}
-                onSelect={setSelection}
-              />
+        <header className="topbar">
+          <div className="row">
+            {!sidebarOpen && (
+              <>
+                <button className="icon-btn" title="Open sidebar" onClick={toggleSidebar}><SidebarIcon /></button>
+                {activeCase && <button className="icon-btn" title="New chat" onClick={newConversation}><NewChatIcon /></button>}
+              </>
             )}
-          </>
+            <div className="title-pill">
+              <span className="title-text">{activeCase?.label ?? "Medical Assistant"}</span>
+              <StatusBar />
+            </div>
+          </div>
+          {activeCase && (
+            <div className="row gap-sm">
+              <button className="ghost" onClick={() => setPairing(true)} title="Scan with phone">
+                <PhoneIcon size={18} /><span className="hide-sm">Scan with phone</span>
+              </button>
+              <button className={`icon-btn ${panelOpen ? "on" : ""}`} title={panelOpen ? "Close files" : "Case files"}
+                onClick={() => setPanelOpen(!panelOpen)}>
+                <FilesIcon />
+                {pendingReview > 0 && <span className="dot-badge">{pendingReview}</span>}
+              </button>
+            </div>
+          )}
+        </header>
+        {activeCase ? (
+          convId && (
+            <Chat
+              key={convId}
+              caseId={activeCase.id}
+              conversationId={convId}
+              items={items}
+              onItemsChanged={loadItems}
+              onSelect={select}
+            />
+          )
         ) : (
-          <div className="center muted">Create a case to begin. Each case keeps its own records, chat and files.</div>
+          <div className="hero">
+            <h1>What case are we working on?</h1>
+            <p className="muted">Create a case in the sidebar to begin. Each case keeps its own records, chat and files.</p>
+            {!sidebarOpen && <button className="primary" onClick={toggleSidebar}>Open sidebar</button>}
+          </div>
         )}
       </main>
-      {activeCase && (
+      {activeCase && panelOpen && (
         <>
           <div className="resizer" onPointerDown={(e) => {
             dragging.current = true;
             (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
           }} />
           <aside className="panel" style={{ width: panelWidth }}>
-            <ArtifactPanel caseId={activeCase.id} items={items} selection={selection} onSelect={setSelection} onChanged={loadItems} />
+            <ArtifactPanel caseId={activeCase.id} items={items} selection={selection} onSelect={setSelection}
+              onChanged={loadItems} onClose={() => {
+                setPanelOpen(false);
+                setSelection(null);
+              }} />
           </aside>
         </>
       )}

@@ -145,7 +145,9 @@ def _recognize_openrouter(png: bytes) -> list[dict]:
         raise OCRUnavailable(f"Cloud OCR failed: {e}.") from None
     try:
         items = parse_json_reply(data["choices"][0]["message"].get("content") or "").get("spans", [])
-    except (ValueError, AttributeError):  # truncated or non-JSON reply
+        if not isinstance(items, list):
+            raise ValueError("spans must be a list")
+    except (ValueError, AttributeError, KeyError, IndexError, TypeError):
         raise OCRUnavailable("Cloud OCR returned an unreadable reply; retry or transcribe manually.") from None
     spans: list[dict] = []
     for it in items:

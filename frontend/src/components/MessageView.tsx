@@ -3,6 +3,7 @@ import { newKey, post } from "../api";
 import { renderMarkdown } from "../markdown";
 import type { Answer, Citation, Claim, EvidenceQuery, Message, Selection } from "../types";
 import type { Items } from "../App";
+import { CheckIcon, CopyIcon, FilesIcon } from "./icons";
 
 type Props = {
   m: Message;
@@ -14,41 +15,29 @@ type Props = {
   onRetry: (jobId: string) => void;
 };
 
-const clock = (t: number) => new Date(t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-function Meta({ who, at }: { who: string; at: number }) {
-  return <div className="msg-meta"><span className="who">{who}</span>{at ? clock(at) : ""}</div>;
-}
-
 export default function MessageView({ m, job, onSelect, onTrack, onChanged, onRetry }: Props) {
   if (m.role === "user") {
     return (
       <div className="msg user">
-        <Meta who="Doctor" at={m.created_at} />
-        <div className="msg-body">
-          <div className="bubble">{m.content}</div>
-          {job && (job.state === "failed" || job.state === "interrupted") && (
-            <div className="msg-error">
-              {job.error ?? "Failed"} <button className="small" onClick={() => onRetry(m.job_id!)}>Retry</button>
-            </div>
-          )}
-          {job?.state === "cancelled" && <div className="muted small">Cancelled — no reply was saved.</div>}
-        </div>
+        <div className="bubble">{m.content}</div>
+        {job && (job.state === "failed" || job.state === "interrupted") && (
+          <div className="msg-error">
+            {job.error ?? "Failed"} <button className="small" onClick={() => onRetry(m.job_id!)}>Retry</button>
+          </div>
+        )}
+        {job?.state === "cancelled" && <div className="muted small">Cancelled — no reply was saved.</div>}
       </div>
     );
   }
   const t = m.meta?.type;
-  const who = t === "evidence_approval" ? "Approval" : t === "evidence_answer" ? "Evidence" : "Assistant";
   return (
     <div className="msg assistant">
-      <Meta who={who} at={m.created_at} />
-      <div className="msg-body">
       {t === "evidence_approval" && m.meta.query ? (
         <ApprovalCard q={m.meta.query} text={m.content} onTrack={onTrack} onChanged={onChanged} />
       ) : t === "evidence_answer" ? (
         <EvidenceAnswer m={m} onSelect={onSelect} />
       ) : (
-        <div className="bubble">
+        <div className="reply">
           <div className="md" dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content ?? "", { breaks: true }) }} />
           {m.meta?.tools?.length > 0 && (
             <div className="chips">
@@ -60,19 +49,40 @@ export default function MessageView({ m, job, onSelect, onTrack, onChanged, onRe
             </div>
           )}
           {m.meta?.created?.length > 0 && (
-            <div className="chips">
+            <div className="created">
               {m.meta.created.map((c: any) => (
-                <button key={c.id} className="chip link" onClick={() => onSelect({ type: c.type, id: c.id })}>
-                  Open {c.type} {c.id.slice(-6)}
+                <button key={c.id} className="file-card" onClick={() => onSelect({ type: c.type, id: c.id })}>
+                  <span className="file-icon"><FilesIcon size={18} /></span>
+                  <span>
+                    <span className="block">Open {c.type}</span>
+                    <span className="muted tiny block">{c.id.slice(-6)}</span>
+                  </span>
                 </button>
               ))}
             </div>
           )}
-          {t === "agent" && <div className="agent-line">{m.meta.agent} · {m.meta.model} · {m.meta.steps} step(s)</div>}
+          <div className="msg-actions">
+            <CopyButton text={m.content ?? ""} />
+            {t === "agent" && <span className="muted tiny">{m.meta.agent} · {m.meta.model} · {m.meta.steps} step(s)</span>}
+          </div>
         </div>
       )}
-      </div>
     </div>
+  );
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <button className="icon-btn sm" title={done ? "Copied" : "Copy"} onClick={async () => {
+      try {
+        await navigator.clipboard.writeText(text);
+        setDone(true);
+        setTimeout(() => setDone(false), 1500);
+      } catch {
+        /* clipboard unavailable (non-secure context) */
+      }
+    }}>{done ? <CheckIcon size={16} /> : <CopyIcon size={16} />}</button>
   );
 }
 
@@ -108,7 +118,7 @@ function ApprovalCard({ q, text, onTrack, onChanged }: { q: EvidenceQuery; text:
     }
   };
   return (
-    <div className={`bubble approval ${q.status}`}>
+    <div className={`card-msg approval ${q.status}`}>
       <p>{text}</p>
       <div className="approval-box">
         <div className="label">Outgoing general research topic</div>
@@ -201,7 +211,7 @@ function EvidenceAnswer({ m, onSelect }: { m: Message; onSelect: (s: Selection) 
   };
 
   return (
-    <div className="bubble evidence">
+    <div className="card-msg evidence">
       <div className="draft-note">Draft for clinician review · literature retrieved {a.retrieved_at ? new Date(a.retrieved_at * 1000).toLocaleString() : ""}</div>
       {a.query && <div className="muted tiny">Approved topic: {a.query.description}</div>}
       {a.findings.length === 0 ? (

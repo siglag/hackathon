@@ -7,21 +7,39 @@ import TableView from "./TableView";
 import JsonView from "./JsonView";
 import ImageView from "./ImageView";
 import ExtractionReview from "./ExtractionReview";
+import { BackIcon, CloseIcon } from "./icons";
 
-type Props = { caseId: string; items: Items; selection: Selection | null; onSelect: (s: Selection | null) => void; onChanged: () => void };
+type Props = {
+  caseId: string;
+  items: Items;
+  selection: Selection | null;
+  onSelect: (s: Selection | null) => void;
+  onChanged: () => void;
+  onClose: () => void;
+};
 
-export default function ArtifactPanel({ items, selection, onSelect, onChanged }: Props) {
-  if (!selection) return <Overview items={items} onSelect={onSelect} />;
+export default function ArtifactPanel({ items, selection, onSelect, onChanged, onClose }: Props) {
+  const head = (
+    <div className="panel-head">
+      {selection ? (
+        <button className="ghost" onClick={() => onSelect(null)}><BackIcon size={18} /> All items</button>
+      ) : (
+        <strong>Case files</strong>
+      )}
+      <button className="icon-btn" title="Close" onClick={onClose}><CloseIcon /></button>
+    </div>
+  );
+  if (!selection) return <>{head}<Overview items={items} onSelect={onSelect} /></>;
   return (
+    <>
+    {head}
     <div className="panel-inner">
-      <div className="panel-nav">
-        <button className="link" onClick={() => onSelect(null)}>← All items</button>
-      </div>
       {selection.type === "dataset" && <DatasetView key={selection.id} id={selection.id} onSelect={onSelect} onChanged={onChanged} />}
       {selection.type === "artifact" && <ArtifactView key={selection.id} id={selection.id} onSelect={onSelect} />}
       {selection.type === "document" && <DocumentView key={selection.id} id={selection.id} onSelect={onSelect} onChanged={onChanged} />}
       {selection.type === "review" && <ExtractionReview key={selection.id} documentId={selection.id} onSelect={onSelect} onChanged={onChanged} />}
     </div>
+    </>
   );
 }
 
@@ -30,7 +48,7 @@ const fmtTime = (t: number) => new Date(t * 1000).toLocaleString();
 function Overview({ items, onSelect }: { items: Items; onSelect: (s: Selection) => void }) {
   return (
     <div className="panel-inner overview">
-      <h3>Generated files <span>{items.artifacts.length}</span></h3>
+      <h3>Files <span className="muted">{items.artifacts.length}</span></h3>
       {items.artifacts.length === 0 && <p className="muted small">Generated files appear here.</p>}
       <ul className="items">
         {items.artifacts.map((a) => (
@@ -40,7 +58,7 @@ function Overview({ items, onSelect }: { items: Items; onSelect: (s: Selection) 
           </li>
         ))}
       </ul>
-      <h3>Datasets <span>{items.datasets.length}</span></h3>
+      <h3>Datasets <span className="muted">{items.datasets.length}</span></h3>
       <ul className="items">
         {items.datasets.map((d) => (
           <li key={d.id} onClick={() => onSelect({ type: "dataset", id: d.id })}>
@@ -49,8 +67,7 @@ function Overview({ items, onSelect }: { items: Items; onSelect: (s: Selection) 
           </li>
         ))}
       </ul>
-      <h3>Source records <span>{items.documents.length}</span></h3>
-      {items.documents.length === 0 && <p className="muted small">Uploaded and scanned records appear here.</p>}
+      <h3>Records <span className="muted">{items.documents.length}</span></h3>
       <ul className="items">
         {items.documents.map((d) => (
           <li key={d.id} onClick={() => onSelect(d.extraction_state && d.extraction_state !== "reviewed" ? { type: "review", id: d.id } : { type: "document", id: d.id })}>

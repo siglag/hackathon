@@ -39,7 +39,7 @@ async def lifespan(_: FastAPI):
         uses_cloud = "openrouter" in (settings.llm_provider, settings.ocr_engine)
         cloud = ["https://openrouter.ai"] if uses_cloud else []
         netguard.install(settings.ollama_url, settings.gateway_url, *cloud)
-    log.info("started data_dir_set=%s model=%s", bool(settings.data_dir), settings.model)
+    log.info("started provider=%s model=%s", settings.llm_provider, llm.model_label())
     yield
 
 
@@ -119,7 +119,7 @@ def system_status(p: Principal = Doctor):
             gw = c.get("/v1/health", headers={"X-Gateway-Key": settings.gateway_secret()}).json()
     except Exception as e:  # noqa: BLE001
         gw = {"ok": False, "error": type(e).__name__}
-    return {"model": llm.status(), "ocr": {"ok": ok, "engine": eng}, "gateway": gw, "agent": settings.agent_backend,
+    return {"model": llm.status(), "ocr": {"ok": ok, "engine": eng, "cloud": settings.ocr_engine == "openrouter"}, "gateway": gw, "agent": settings.agent_backend,
             "limits": {"upload_mb": settings.max_upload_bytes // 2**20, "pdf_pages": settings.max_pdf_pages,
                        "sheet_rows": settings.max_sheet_rows}, "retention_days": settings.retention_days or None}
 

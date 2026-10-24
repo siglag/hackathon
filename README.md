@@ -34,6 +34,21 @@ Go back to local Qwen with `LLM=ollama scripts/run.sh`, and to local PaddleOCR w
 
 A/B harness: `backend/.venv/bin/python -I scripts/ab_test.py`. Results go to `ab_results/REPORT.md`.
 
+## Start the cloud OCR branch
+
+Run `./start.sh` (or `scripts/run.sh`) to build the current UI and start the API
+and evidence gateway. The launcher checks the OpenRouter key, service ports,
+and readiness, and stops its child services together. Chat uses DeepSeek and
+OCR uses Gemini via OpenRouter by default; cloud mode is visible in the UI.
+Local Paddle models are prepared only when `OCR=paddle` is selected.
+`LLM=ollama` retains optional local inference and the WSL relay.
+
+This branch includes the `deepseek-openrouter` interface from `1a42133`, the
+synthetic demo image from `834d012`, and the startup improvements from `bf51fe5`,
+adapted to preserve cloud OCR. The local-only OCR implementation and historical
+A/B result changes were not copied over. Use `demo-data/synthetic-lab-report.png`
+for a synthetic upload.
+
 ## Quick start (WSL + Ollama on Windows)
 
 ```bash
