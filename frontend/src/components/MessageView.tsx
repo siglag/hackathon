@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { newKey, post } from "../api";
+import { renderMarkdown } from "../markdown";
 import type { Answer, Citation, Claim, EvidenceQuery, Message, Selection } from "../types";
 import type { Items } from "../App";
 
@@ -36,7 +37,7 @@ export default function MessageView({ m, job, onSelect, onTrack, onChanged, onRe
         <EvidenceAnswer m={m} onSelect={onSelect} />
       ) : (
         <div className="bubble">
-          <p className="pre">{m.content}</p>
+          <div className="md" dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content ?? "", { breaks: true }) }} />
           {m.meta?.tools?.length > 0 && (
             <div className="chips">
               {m.meta.tools.map((tl: any, i: number) => (
