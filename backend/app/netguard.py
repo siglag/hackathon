@@ -14,9 +14,12 @@ from __future__ import annotations
 import ipaddress
 import socket
 import sys
+import time
 from urllib.parse import urlparse
 
 _allowed: set[str] = set()
+_hostnames: set[str] = set()
+_last_refresh = 0.0
 _installed = False
 
 
@@ -34,15 +37,32 @@ def _is_local(host: str) -> bool:
     return ip.is_loopback or str(ip) in _allowed
 
 
+def _resolve(hosts: set[str]) -> None:
+    for h in hosts:
+        try:
+            for info in socket.getaddrinfo(h, None):
+                _allowed.add(info[4][0])
+        except OSError:
+            pass
+
+
 def _hook(event: str, args: tuple) -> None:
+    global _last_refresh
     if event != "socket.connect":
         return
     sock, addr = args[0], args[1]
     if getattr(sock, "family", None) == socket.AF_UNIX:
         return
     host = addr[0] if isinstance(addr, tuple) else str(addr)
-    if not _is_local(host):
-        raise EgressBlocked(f"egress to non-local address blocked in API process: {host}")
+    if _is_local(host):
+        return
+    # Allowlisted hostnames behind CDNs change IPs; re-resolve at most every 30 s.
+    if _hostnames and time.monotonic() - _last_refresh > 30:
+        _last_refresh = time.monotonic()
+        _resolve(_hostnames)
+        if _is_local(host):
+            return
+    raise EgressBlocked(f"egress to non-local address blocked in API process: {host}")
 
 
 def install(*urls: str) -> None:
@@ -53,10 +73,10 @@ def install(*urls: str) -> None:
             continue
         _allowed.add(h)
         try:
-            for info in socket.getaddrinfo(h, None):
-                _allowed.add(info[4][0])
-        except OSError:
-            pass
+            ipaddress.ip_address(h)
+        except ValueError:
+            _hostnames.add(h)
+        _resolve({h})
     if not _installed:
         sys.addaudithook(_hook)
         _installed = True

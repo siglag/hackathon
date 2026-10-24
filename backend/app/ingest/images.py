@@ -46,7 +46,10 @@ def quality_checks(gray: np.ndarray) -> dict:
     h, w = gray.shape[:2]
     small = cv2.resize(gray, (min(w, 1000), int(h * min(w, 1000) / w))) if w > 1000 else gray
     blur = float(cv2.Laplacian(small, cv2.CV_64F).var())
-    glare = float((small >= 250).mean())
+    # Glare = blown-out highlights on a photographed page. A clean scan's white paper is
+    # also >= 250, so only count it when the page background itself is not near-white.
+    background = float(np.percentile(small, 75))
+    glare = float((small >= 250).mean()) if background < 235 else 0.0
     warnings = []
     if blur < 60:
         warnings.append("Image appears blurry; numbers may be misread. Consider retaking.")
@@ -54,7 +57,7 @@ def quality_checks(gray: np.ndarray) -> dict:
         warnings.append("Strong glare detected; part of the page may be unreadable.")
     if min(h, w) < 700:
         warnings.append("Low resolution; move closer or use a higher-resolution capture.")
-    return {"blur_score": round(blur, 1), "glare_fraction": round(glare, 3), "width": w, "height": h, "warnings": warnings}
+    return {"blur_score": round(blur, 1), "glare_fraction": round(glare, 3), "background": round(background, 1), "width": w, "height": h, "warnings": warnings}
 
 
 def _perspective(bgr: np.ndarray) -> np.ndarray | None:

@@ -39,6 +39,11 @@ class Settings:
     think: bool = field(default_factory=lambda: _env_bool("THINK", True))
     # JSON tasks use a raw Qwen prompt with an empty <think> block (no reasoning).
     raw_json_no_think: bool = field(default_factory=lambda: _env_bool("RAW_JSON_NO_THINK", True))
+    # DeepSeek via OpenRouter is the application default. Legacy Ollama settings
+    # above are retained only for the standalone A/B harness.
+    llm_provider: str = field(default_factory=lambda: _env("LLM_PROVIDER", "openrouter"))
+    allow_cloud_model: bool = field(default_factory=lambda: _env_bool("ALLOW_CLOUD_MODEL", False))
+    openrouter_model: str = field(default_factory=lambda: _env("OPENROUTER_MODEL", "deepseek/deepseek-v4.1-flash-1017"))
     agent_backend: str = field(default_factory=lambda: _env("AGENT_BACKEND", "local"))  # local | hermes
     agent_max_steps: int = field(default_factory=lambda: _env_int("AGENT_MAX_STEPS", 6))
 
@@ -73,6 +78,9 @@ class Settings:
     # OCR
     ocr_engine: str = field(default_factory=lambda: _env("OCR_ENGINE", "paddle"))  # paddle | none
     ocr_lang: str = field(default_factory=lambda: _env("OCR_LANG", "en"))
+    # Text detection runs on a copy whose longest side is capped (boxes are mapped back and
+    # recognition reads the full-resolution image). Full-size 300-dpi pages needed ~11 GB.
+    ocr_det_max_side: int = field(default_factory=lambda: _env_int("OCR_DET_MAX_SIDE", 1600))
     ocr_structure: bool = field(default_factory=lambda: _env_bool("OCR_STRUCTURE", False))
 
     # Reports
@@ -89,6 +97,14 @@ class Settings:
     @property
     def files_dir(self) -> Path:
         return self.data_dir / "files"
+
+    def openrouter_api_key(self) -> str:
+        """From the environment or an owner-only file in the data dir; never from the repo."""
+        env = os.environ.get("MEDASSIST_OPENROUTER_API_KEY")
+        if env:
+            return env.strip()
+        p = self.data_dir / "openrouter.key"
+        return p.read_text().strip() if p.exists() else ""
 
     def gateway_secret(self) -> str:
         """Shared secret authenticating the API to the local gateway."""

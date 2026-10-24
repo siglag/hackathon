@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Setup/update step: download local OCR models and check the local LLM.
+"""Setup/update step: download and validate local OCR models.
 
-Run with NO patient content loaded (spec section 4). Afterwards the API and OCR
-worker need no internet access.
+Run with NO patient content loaded (spec section 4). Afterwards OCR runs locally; DeepSeek inference uses OpenRouter.
 
     backend/.venv/bin/python scripts/setup_models.py
 """
@@ -14,12 +13,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 from PIL import Image, ImageDraw  # noqa: E402
 
-from app.agent import ollama  # noqa: E402
 from app.ingest import ocr  # noqa: E402
 
 
 def main() -> None:
-    print("Local model:", ollama.status())
     ok, eng = ocr.available()
     if not ok:
         print("OCR not installed:", eng)

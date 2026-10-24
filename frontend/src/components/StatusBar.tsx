@@ -11,11 +11,11 @@ export default function StatusBar() {
   }, []);
   if (!s) return null;
   const dot = (ok: boolean, label: string, title: string) => (
-    <span className={`status ${ok ? "ok" : "bad"}`} title={title}>{label}</span>
+    <span className={`status ${ok ? "ok" : "bad"}`} title={title}><i />{label}</span>
   );
   return (
-    <span className="row gap small">
-      {dot(s.model.ok, "Model", s.model.ok ? `${s.model.model} via local Ollama ${s.model.version ?? ""}` : "Local model unavailable")}
+    <span className="status-row">
+      {dot(s.model.ok, s.model.cloud ? "DeepSeek" : "Model", s.model.ok ? (s.model.cloud ? `${s.model.model} via OpenRouter (cloud)` : `${s.model.model} via local Ollama ${s.model.version ?? ""}`) : `Model unavailable: ${s.model.error ?? ""}`)}
       {dot(s.ocr.ok, "OCR", s.ocr.ok ? s.ocr.engine : `OCR unavailable: ${s.ocr.engine}`)}
       {dot(!!s.gateway.ok, "Evidence", s.gateway.ok ? `Gateway up · ${s.gateway.provider}` : "Evidence gateway offline; local work continues")}
     </span>
