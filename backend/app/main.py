@@ -32,8 +32,12 @@ async def lifespan(_: FastAPI):
     if settings.llm_provider == "openrouter" and not settings.allow_cloud_model:
         raise RuntimeError("MEDASSIST_LLM_PROVIDER=openrouter sends case content to a cloud model; "
                            "set MEDASSIST_ALLOW_CLOUD_MODEL=1 to confirm (synthetic data only).")
+    if settings.ocr_engine == "openrouter" and not settings.allow_cloud_model:
+        raise RuntimeError("MEDASSIST_OCR_ENGINE=openrouter sends page images to a cloud model; "
+                           "set MEDASSIST_ALLOW_CLOUD_MODEL=1 to confirm (synthetic data only).")
     if settings.network_guard:
-        cloud = ["https://openrouter.ai"] if settings.llm_provider == "openrouter" else []
+        uses_cloud = "openrouter" in (settings.llm_provider, settings.ocr_engine)
+        cloud = ["https://openrouter.ai"] if uses_cloud else []
         netguard.install(settings.ollama_url, settings.gateway_url, *cloud)
     log.info("started data_dir_set=%s model=%s", bool(settings.data_dir), settings.model)
     yield

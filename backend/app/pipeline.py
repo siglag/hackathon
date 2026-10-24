@@ -8,7 +8,7 @@ from typing import Any
 
 import httpx
 
-from . import artifacts, datasets, db, storage
+from . import artifacts, datasets, db, netguard, storage
 from .agent import llm
 from .agent.adapter import get_adapter
 from .audit import audit
@@ -72,7 +72,12 @@ def _ocr_page(ctx: JobContext, png: bytes, page_no: int, total: int) -> list[dic
     except Exception as e:  # noqa: BLE001 - engine/model loading failures
         if isinstance(e, Cancelled):
             raise
-        raise JobError("The local OCR engine failed to run. If models are missing, run scripts/setup_models.py "
+        # Engine errors carry model/file paths, not record content; keep the cause so failures can be diagnosed.
+        log.exception("ocr failed job=%s page=%s", ctx.id, page_no)
+        if isinstance(e, netguard.EgressBlocked):
+            raise JobError("OCR models are not in the local cache, and the API may not download them. "
+                           "Run scripts/setup_models.py as the same user that runs the API, then retry.") from None
+        raise JobError(f"The local OCR engine failed to run ({type(e).__name__}). If models are missing, run scripts/setup_models.py "
                        "(setup step, no patient data loaded). The original is stored; retry afterwards.") from None
 
 

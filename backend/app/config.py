@@ -75,9 +75,16 @@ class Settings:
     network_guard: bool = field(default_factory=lambda: _env_bool("NETWORK_GUARD", True))
 
     # OCR
-    ocr_engine: str = field(default_factory=lambda: _env("OCR_ENGINE", "paddle"))  # paddle | none
+    ocr_engine: str = field(default_factory=lambda: _env("OCR_ENGINE", "paddle"))  # paddle | openrouter (CLOUD) | none
+    # Vision model for OCR_ENGINE=openrouter; Qwen3-VL returns 0-1000 grounding boxes natively.
+    ocr_model: str = field(default_factory=lambda: _env("OCR_MODEL", "qwen/qwen3-vl-235b-a22b-instruct"))
+    ocr_max_tokens: int = field(default_factory=lambda: _env_int("OCR_MAX_TOKENS", 16000))
     ocr_lang: str = field(default_factory=lambda: _env("OCR_LANG", "en"))
     ocr_structure: bool = field(default_factory=lambda: _env_bool("OCR_STRUCTURE", False))
+    # Memory bounds: full-resolution phone photos make Paddle's CPU detector use several GB.
+    # 2400 px on the long side is ~200 dpi for an A4 page, enough for printed records.
+    ocr_max_side: int = field(default_factory=lambda: _env_int("OCR_MAX_SIDE", 2400))
+    ocr_det_side: int = field(default_factory=lambda: _env_int("OCR_DET_SIDE", 1600))
 
     # Reports
     pdf_font_path: str = field(default_factory=lambda: _env("PDF_FONT", ""))

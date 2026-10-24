@@ -21,6 +21,9 @@ from app.ingest import ocr  # noqa: E402
 def main() -> None:
     print("Local model:", ollama.status())
     ok, eng = ocr.available()
+    if ok and eng.startswith("openrouter:"):
+        print(f"OCR uses the cloud model {eng}; no local models to download.")
+        return
     if not ok:
         print("OCR not installed:", eng)
         return

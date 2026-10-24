@@ -38,6 +38,11 @@ if [ "${LLM:-openrouter}" = "openrouter" ]; then
   export MEDASSIST_LLM_PROVIDER=openrouter MEDASSIST_ALLOW_CLOUD_MODEL=1
   echo "WARNING: cloud model ${MEDASSIST_OPENROUTER_MODEL:-deepseek/deepseek-v4.1-flash-1017} — case content is sent to OpenRouter." >&2
 fi
+# OCR via an OpenRouter vision model replaces local PaddleOCR. Set OCR=paddle to go back.
+if [ "${OCR:-openrouter}" = "openrouter" ]; then
+  export MEDASSIST_OCR_ENGINE=openrouter MEDASSIST_ALLOW_CLOUD_MODEL=1
+  echo "WARNING: cloud OCR ${MEDASSIST_OCR_MODEL:-qwen/qwen3-vl-235b-a22b-instruct} — page images are sent to OpenRouter." >&2
+fi
 
 cd "$ROOT/backend"
 # Create the API<->gateway shared secret once, before either process starts.
