@@ -35,7 +35,7 @@ async def lifespan(_: FastAPI):
     if settings.network_guard:
         cloud = ["https://openrouter.ai"] if settings.llm_provider == "openrouter" else []
         netguard.install(settings.ollama_url, settings.gateway_url, *cloud)
-    log.info("started data_dir_set=%s model=%s", bool(settings.data_dir), settings.model)
+    log.info("started provider=%s model=%s", settings.llm_provider, llm.model_label())
     yield
 
 

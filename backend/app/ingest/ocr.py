@@ -44,6 +44,8 @@ def _get_engine():
                 use_doc_unwarping=False,  # OpenCV handles perspective/deskew
                 use_textline_orientation=False,
                 enable_mkldnn=False,  # Paddle 3.3 oneDNN kernels fail on these models
+                text_det_limit_type="max",
+                text_det_limit_side_len=settings.ocr_det_max_side,
             )
         return _engine
 

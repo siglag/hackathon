@@ -77,6 +77,9 @@ class Settings:
     # OCR
     ocr_engine: str = field(default_factory=lambda: _env("OCR_ENGINE", "paddle"))  # paddle | none
     ocr_lang: str = field(default_factory=lambda: _env("OCR_LANG", "en"))
+    # Text detection runs on a copy whose longest side is capped (boxes are mapped back and
+    # recognition reads the full-resolution image). Full-size 300-dpi pages needed ~11 GB.
+    ocr_det_max_side: int = field(default_factory=lambda: _env_int("OCR_DET_MAX_SIDE", 1600))
     ocr_structure: bool = field(default_factory=lambda: _env_bool("OCR_STRUCTURE", False))
 
     # Reports
