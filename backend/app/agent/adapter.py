@@ -109,7 +109,7 @@ class LocalToolAgent:
             check_cancel()
             final_step = step == settings.agent_max_steps
             reply = ollama.chat(msgs, tools=None if final_step else tool_defs, on_token=None)
-            calls = reply.get("tool_calls") or []
+            calls = (reply.get("tool_calls") or [])[:3]  # every call sent back must get a tool result
             if not calls:
                 text = reply.get("content") or ""
                 calls = _textual_tool_calls(text)
@@ -118,7 +118,7 @@ class LocalToolAgent:
                         on_token(text)
                     return TurnResult(text, events, ctx.created, step, ctx.evidence_queries)
             msgs.append({"role": "assistant", "content": reply.get("content") or "", "tool_calls": calls})
-            for call in calls[:3]:
+            for call in calls:
                 fn = call.get("function", {})
                 name, args = fn.get("name", ""), fn.get("arguments", {})
                 emit("tool", {"name": name, "status": "running"})
@@ -131,7 +131,7 @@ class LocalToolAgent:
                     ev = {"name": name, "status": "error", "error": str(e)}
                 emit("tool", ev)
                 events.append(ev)
-                msgs.append({"role": "tool", "content": result, "tool_name": name})
+                msgs.append({"role": "tool", "content": result, "tool_name": name, "tool_call_id": call.get("id")})
             if failures >= 3:
                 msgs.append({"role": "user", "content": "Stop calling tools. Briefly explain what could not be done."})
         text = "I stopped because the step limit was reached. " + _summarize(ctx)
