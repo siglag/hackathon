@@ -14,23 +14,35 @@ type Props = {
   onRetry: (jobId: string) => void;
 };
 
+const clock = (t: number) => new Date(t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+function Meta({ who, at }: { who: string; at: number }) {
+  return <div className="msg-meta"><span className="who">{who}</span>{at ? clock(at) : ""}</div>;
+}
+
 export default function MessageView({ m, job, onSelect, onTrack, onChanged, onRetry }: Props) {
   if (m.role === "user") {
     return (
       <div className="msg user">
-        <div className="bubble">{m.content}</div>
-        {job && (job.state === "failed" || job.state === "interrupted") && (
-          <div className="msg-error">
-            {job.error ?? "Failed"} <button className="small" onClick={() => onRetry(m.job_id!)}>Retry</button>
-          </div>
-        )}
-        {job?.state === "cancelled" && <div className="muted small">Cancelled — no reply was saved.</div>}
+        <Meta who="Doctor" at={m.created_at} />
+        <div className="msg-body">
+          <div className="bubble">{m.content}</div>
+          {job && (job.state === "failed" || job.state === "interrupted") && (
+            <div className="msg-error">
+              {job.error ?? "Failed"} <button className="small" onClick={() => onRetry(m.job_id!)}>Retry</button>
+            </div>
+          )}
+          {job?.state === "cancelled" && <div className="muted small">Cancelled — no reply was saved.</div>}
+        </div>
       </div>
     );
   }
   const t = m.meta?.type;
+  const who = t === "evidence_approval" ? "Approval" : t === "evidence_answer" ? "Evidence" : "Assistant";
   return (
     <div className="msg assistant">
+      <Meta who={who} at={m.created_at} />
+      <div className="msg-body">
       {t === "evidence_approval" && m.meta.query ? (
         <ApprovalCard q={m.meta.query} text={m.content} onTrack={onTrack} onChanged={onChanged} />
       ) : t === "evidence_answer" ? (
@@ -56,9 +68,10 @@ export default function MessageView({ m, job, onSelect, onTrack, onChanged, onRe
               ))}
             </div>
           )}
-          {t === "agent" && <div className="muted tiny">{m.meta.agent} · {m.meta.model} · {m.meta.steps} step(s)</div>}
+          {t === "agent" && <div className="agent-line">{m.meta.agent} · {m.meta.model} · {m.meta.steps} step(s)</div>}
         </div>
       )}
+      </div>
     </div>
   );
 }

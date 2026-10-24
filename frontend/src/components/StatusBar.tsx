@@ -14,9 +14,9 @@ export default function StatusBar() {
     <span className={`status ${ok ? "ok" : "bad"}`} title={title}>{label}</span>
   );
   return (
-    <span className="row gap small">
+    <span className="row gap wrap" style={{ gap: 14 }}>
       {s.model.cloud && (
-        <span className="status bad" title="Record text, questions and extracted values are sent to OpenRouter for this model.">
+        <span className="status alarm" title="Record text, questions and extracted values are sent to OpenRouter for this model.">
           CLOUD MODEL · case content leaves this workstation
         </span>
       )}

@@ -30,7 +30,7 @@ const fmtTime = (t: number) => new Date(t * 1000).toLocaleString();
 function Overview({ items, onSelect }: { items: Items; onSelect: (s: Selection) => void }) {
   return (
     <div className="panel-inner overview">
-      <h3>Files ({items.artifacts.length})</h3>
+      <h3>Generated files <span>{items.artifacts.length}</span></h3>
       {items.artifacts.length === 0 && <p className="muted small">Generated files appear here.</p>}
       <ul className="items">
         {items.artifacts.map((a) => (
@@ -40,7 +40,7 @@ function Overview({ items, onSelect }: { items: Items; onSelect: (s: Selection) 
           </li>
         ))}
       </ul>
-      <h3>Datasets ({items.datasets.length})</h3>
+      <h3>Datasets <span>{items.datasets.length}</span></h3>
       <ul className="items">
         {items.datasets.map((d) => (
           <li key={d.id} onClick={() => onSelect({ type: "dataset", id: d.id })}>
@@ -49,7 +49,8 @@ function Overview({ items, onSelect }: { items: Items; onSelect: (s: Selection) 
           </li>
         ))}
       </ul>
-      <h3>Records ({items.documents.length})</h3>
+      <h3>Source records <span>{items.documents.length}</span></h3>
+      {items.documents.length === 0 && <p className="muted small">Uploaded and scanned records appear here.</p>}
       <ul className="items">
         {items.documents.map((d) => (
           <li key={d.id} onClick={() => onSelect(d.extraction_state && d.extraction_state !== "reviewed" ? { type: "review", id: d.id } : { type: "document", id: d.id })}>

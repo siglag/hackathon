@@ -39,8 +39,9 @@ function Login({ setup, onDone }: { setup: boolean; onDone: () => void }) {
   return (
     <div className="center">
       <form className="card login" onSubmit={submit}>
-        <h1>Local Medical Assistant</h1>
-        <p className="muted">{setup ? "Create the doctor account for this workstation." : "Sign in to this workstation."}</p>
+        <p className="kicker">Local workstation</p>
+        <h1>Medical Assistant</h1>
+        <p className="muted" style={{ margin: 0 }}>{setup ? "Create the doctor account for this workstation." : "Sign in to continue."}</p>
         <label>
           Username
           <input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" required />
@@ -52,7 +53,7 @@ function Login({ setup, onDone }: { setup: boolean; onDone: () => void }) {
         </label>
         {err && <div className="error">{err}</div>}
         <button className="primary">{setup ? "Create account" : "Sign in"}</button>
-        <p className="muted small">All records, OCR and model inference stay on this workstation.</p>
+        <p className="muted small fineprint">Records and OCR are processed on this workstation.</p>
       </form>
     </div>
   );
@@ -154,10 +155,10 @@ function Workspace({ onLogout }: { onLogout: () => void }) {
           <>
             <header className="case-bar">
               <div>
-                <span className="muted small">Active case</span>
+                <span className="case-kicker">Case file</span>
                 <strong className="case-label">{activeCase.label}</strong>
               </div>
-              <div className="row gap">
+              <div className="row gap wrap">
                 <StatusBar />
                 <button onClick={() => setPairing(true)}>Scan with phone</button>
               </div>
