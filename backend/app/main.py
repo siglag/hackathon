@@ -29,8 +29,12 @@ log = logging.getLogger("medassist.api")
 async def lifespan(_: FastAPI):
     db.init_db()
     jobs.recover_after_restart()
+    if settings.llm_provider == "openrouter" and not settings.allow_cloud_model:
+        raise RuntimeError("MEDASSIST_LLM_PROVIDER=openrouter sends case content to a cloud model; "
+                           "set MEDASSIST_ALLOW_CLOUD_MODEL=1 to confirm (synthetic data only).")
     if settings.network_guard:
-        netguard.install(settings.ollama_url, settings.gateway_url)
+        cloud = ["https://openrouter.ai"] if settings.llm_provider == "openrouter" else []
+        netguard.install(settings.ollama_url, settings.gateway_url, *cloud)
     log.info("started data_dir_set=%s model=%s", bool(settings.data_dir), settings.model)
     yield
 
