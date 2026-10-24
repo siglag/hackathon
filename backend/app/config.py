@@ -39,8 +39,9 @@ class Settings:
     think: bool = field(default_factory=lambda: _env_bool("THINK", True))
     # JSON tasks use a raw Qwen prompt with an empty <think> block (no reasoning).
     raw_json_no_think: bool = field(default_factory=lambda: _env_bool("RAW_JSON_NO_THINK", True))
-    # Provider: "ollama" (local, default) or "openrouter" (CLOUD, experimental; sends case content off-site).
-    llm_provider: str = field(default_factory=lambda: _env("LLM_PROVIDER", "ollama"))
+    # DeepSeek via OpenRouter is the application default. Legacy Ollama settings
+    # above are retained only for the standalone A/B harness.
+    llm_provider: str = field(default_factory=lambda: _env("LLM_PROVIDER", "openrouter"))
     allow_cloud_model: bool = field(default_factory=lambda: _env_bool("ALLOW_CLOUD_MODEL", False))
     openrouter_model: str = field(default_factory=lambda: _env("OPENROUTER_MODEL", "deepseek/deepseek-v4.1-flash-1017"))
     agent_backend: str = field(default_factory=lambda: _env("AGENT_BACKEND", "local"))  # local | hermes

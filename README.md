@@ -1,74 +1,57 @@
 # Local Medical Assistant
 
 A locally hosted workspace that helps a doctor read records, organize patient data, create files, and research medical questions.
-Implements `medical-assistant-project-spec.md` (MVP). Patient records, chat, OCR, model inference, and generated files stay on the workstation.
+Implements `medical-assistant-project-spec.md` (MVP). Storage, OCR, and generated files stay on the workstation. Model prompts are sent to DeepSeek through OpenRouter.
 Public literature comes from the hosted PubMed MCP, reached only through a restricted local gateway.
 
 ```
 Phone (camera) ──HTTPS──┐
 Desktop UI ─────────────┼─> API (FastAPI :8600) ──> SQLite + files (~/.local/share/medassist)
                         │        ├─> PaddleOCR PP-OCRv5 + OpenCV (local)
-                        │        ├─> Agent adapter ──> Ollama qwen3:4b (local)
+                        │        ├─> Agent adapter ──HTTPS──> DeepSeek (OpenRouter)
                         │        └─> Evidence gateway (:8601, loopback) ──HTTPS──> pubmed.caseyjhand.com/mcp
-                        │               (the ONLY process with internet egress)
 ```
 
 ## Branch `deepseek-openrouter` (experimental, CLOUD model)
 
-On this branch, `scripts/run.sh` replaces local Qwen with **DeepSeek V4.1 Flash 1017** (`deepseek/deepseek-v4.1-flash-1017`) via OpenRouter.
+Both `./start.sh` and `scripts/run.sh` use **DeepSeek V4.1 Flash 1017** (`deepseek/deepseek-v4.1-flash-1017`) via OpenRouter.
 
 > **This breaks the spec's core privacy rule (§4).** Every model call (record text, questions, extracted values, case data in prompts) goes to OpenRouter and the upstream provider. Use synthetic data only.
 
 Safeguards that remain:
 
-* The API refuses to start with `MEDASSIST_LLM_PROVIDER=openrouter` unless `MEDASSIST_ALLOW_CLOUD_MODEL=1` is set. `run.sh` sets both on this branch.
+* The API refuses to start with `MEDASSIST_LLM_PROVIDER=openrouter` unless `MEDASSIST_ALLOW_CLOUD_MODEL=1` is set. Both launchers set these explicitly.
 * The UI shows a red "CLOUD MODEL" banner.
 * The egress guard allows only `openrouter.ai`, in addition to local addresses.
 * Requests ask OpenRouter for `data_collection: deny`. That is a routing policy, not a guarantee.
 * OCR, storage, and the PubMed gateway still run locally, unchanged.
 
 The key is read from `MEDASSIST_OPENROUTER_API_KEY` or `~/.local/share/medassist/openrouter.key` (mode 600). It is never stored in the repo.
-Go back to local Qwen with `LLM=ollama scripts/run.sh`.
+The launchers always select DeepSeek, even if an old shell has Ollama provider settings. They do not start Ollama, load Qwen, or start the WSL Ollama relay.
 
-A/B harness: `backend/.venv/bin/python -I scripts/ab_test.py`. Results go to `ab_results/REPORT.md`.
+The legacy Ollama adapter and standalone A/B harness are retained for historical experiments only; they are not part of application startup. Previous results are in `ab_results/REPORT.md`.
 
-## Quick start (WSL + Ollama on Windows)
+## Quick start (DeepSeek via OpenRouter)
+
+Install Node.js/npm and either `uv` or Python 3.11–3.13 (3.12 recommended).
+Configure the existing OpenRouter key as described above, then run:
 
 ```bash
-# 1. Backend (Python 3.12; PaddlePaddle has no 3.14 wheels)
-cd backend
-uv venv --python 3.12 .venv
-uv pip install --python .venv/bin/python -e '.[ocr,dev]'
-
-# 2. Setup step: download OCR models (no patient data loaded)
-.venv/bin/python -I ../scripts/setup_models.py
-
-# 3. Frontend
-cd ../frontend && npm install && npm run build
-
-# 4. Run relay (if needed) + gateway + API
-cd .. && scripts/run.sh
-# open http://127.0.0.1:8600 and create the doctor account
+./start.sh
+# For access from another device on the LAN:
+HOST=0.0.0.0 ./start.sh
 ```
 
-### Ollama on Windows, app in WSL
+The launcher prepares missing dependencies, checks the OpenRouter credentials,
+builds the frontend, prepares local PaddleOCR models using a synthetic image,
+and starts the evidence gateway and API. Open `http://127.0.0.1:8600`.
+Press Ctrl+C to stop. Logs are in `~/.local/state/medassist` (override with
+`MEDASSIST_LOG_DIR`). `scripts/run.sh` is an alias for the same launcher.
 
-Windows Ollama listens on Windows-localhost (`127.0.0.1:11434`), which a NAT-mode WSL2 distro cannot reach.
-Opening the Windows firewall needs admin rights. `scripts/ollama_wsl_relay.py` solves this without admin rights:
-
-* It listens on WSL's `127.0.0.1:11434` (loopback only; it refuses to bind elsewhere).
-* It forwards each request through `curl.exe`, a Windows process started via WSL interop that can reach Windows-localhost.
-* Request bodies travel over stdin, never on a command line. Streaming responses pass through unchanged (`curl --raw`).
-* Only `/api/*` and `/v1/*` paths are forwarded.
-
-`scripts/run.sh` starts the relay automatically when it detects WSL and nothing answers on `127.0.0.1:11434`.
-
-Alternatives, if you prefer:
-
-* Set `networkingMode=mirrored` in `%UserProfile%\.wslconfig`, then run `wsl --shutdown`. After that, `127.0.0.1:11434` reaches Windows directly.
-* Set `MEDASSIST_OLLAMA_URL` to any other private route.
-
-Do not set `OLLAMA_HOST=0.0.0.0` on the Windows side; that would expose Ollama to the LAN (spec §14).
+The model defaults to `deepseek/deepseek-v4.1-flash-1017` and can be set with
+`MEDASSIST_OPENROUTER_MODEL` to another `deepseek/` model. Startup fails if the
+key is missing or OpenRouter is unavailable. There is no fallback to Qwen.
+Local OCR remains enabled; use `MEDASSIST_OCR_ENGINE=none` to disable it.
 
 ### Phone capture (HTTPS on the clinic LAN)
 
@@ -122,7 +105,7 @@ The tests cover the outbound policy (vocabulary resolution, identifier detection
 All settings are `MEDASSIST_*` environment variables (`backend/app/config.py`), e.g.:
 
 * `DATA_DIR`: keep it outside cloud-synced folders, on an encrypted disk.
-* `OLLAMA_URL`, `MODEL`, `NUM_CTX`, `THINK`, `AGENT_MAX_STEPS`.
+* `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `MODEL_TIMEOUT`, `AGENT_MAX_STEPS`.
 * `GATEWAY_URL`, `MCP_URL`, `MCP_ALLOWED_HOSTS`.
 * `MAX_UPLOAD_MB`, `MAX_PDF_PAGES`, `MAX_SHEET_ROWS`, `MAX_DECOMPRESSED_MB`, `MAX_IMAGE_MEGAPIXELS`.
 * `RETAIN_CAPTURE_ORIGINALS`, `RETENTION_DAYS` (set per clinic policy), `SECURE_COOKIES`, `ALLOWED_ORIGINS`.

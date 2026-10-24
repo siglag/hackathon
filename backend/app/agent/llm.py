@@ -1,4 +1,4 @@
-"""Provider-neutral LLM facade: local Ollama (default) or OpenRouter (cloud, opt-in).
+"""LLM facade: DeepSeek via OpenRouter by default (cloud, explicit opt-in).
 
 ``use("ollama"|"openrouter")`` overrides the provider for the current thread,
 which the A/B harness uses to run identical tasks against both.
