@@ -76,8 +76,9 @@ class Settings:
 
     # OCR
     ocr_engine: str = field(default_factory=lambda: _env("OCR_ENGINE", "paddle"))  # paddle | openrouter (CLOUD) | none
-    # Vision model for OCR_ENGINE=openrouter; Qwen3-VL returns 0-1000 grounding boxes natively.
-    ocr_model: str = field(default_factory=lambda: _env("OCR_MODEL", "qwen/qwen3-vl-235b-a22b-instruct"))
+    # Vision model for OCR_ENGINE=openrouter. google/* models are read as [ymin, xmin, ymax, xmax] boxes;
+    # others as [x0, y0, x1, y1]. Both normalized 0-1000.
+    ocr_model: str = field(default_factory=lambda: _env("OCR_MODEL", "google/gemini-3.8-flash"))
     ocr_max_tokens: int = field(default_factory=lambda: _env_int("OCR_MAX_TOKENS", 16000))
     ocr_lang: str = field(default_factory=lambda: _env("OCR_LANG", "en"))
     ocr_structure: bool = field(default_factory=lambda: _env_bool("OCR_STRUCTURE", False))

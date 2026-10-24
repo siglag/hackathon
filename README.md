@@ -15,7 +15,7 @@ Desktop UI ─────────────┼─> API (FastAPI :8600) �
 
 ## Branch `deepseek-openrouter` (experimental, CLOUD model)
 
-On this branch, `scripts/run.sh` replaces local Qwen with **DeepSeek V4.1 Flash 1017** (`deepseek/deepseek-v4.1-flash-1017`) via OpenRouter, and local PaddleOCR with the vision model **Qwen3-VL 235B A22B Instruct** (`qwen/qwen3-vl-235b-a22b-instruct`, set with `MEDASSIST_OCR_MODEL`).
+On this branch, `scripts/run.sh` replaces local Qwen with **DeepSeek V4.1 Flash 1017** (`deepseek/deepseek-v4.1-flash-1017`) via OpenRouter, and local PaddleOCR with the vision model **Gemini 3.8 Flash** (`google/gemini-3.8-flash`, set with `MEDASSIST_OCR_MODEL`). `qwen/qwen3-vl-235b-a22b-instruct` also works and is about 10x cheaper per page.
 
 The OCR model returns each text segment with a box normalized to 0-1000, so OCR boxes in the review UI and line/table rebuilding work as before. It reports no confidence score, so the "low recognition score" warning never fires. Review still applies to every clinically material field.
 

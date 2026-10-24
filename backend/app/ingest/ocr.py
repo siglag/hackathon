@@ -106,10 +106,15 @@ _PROMPT = (
     "translate, normalize or invent text, and skip nothing.\n"
     "Return one entry per text segment. In tables, every cell is its own entry (test name, value, unit, reference "
     "range, flag); outside tables, one entry per contiguous phrase on a line.\n"
-    "Give each entry a tight bounding box [x0, y0, x1, y1] in coordinates normalized to 0-1000 relative to the image "
+    "Give each entry a tight bounding box {box} in coordinates normalized to 0-1000 relative to the image "
     "width and height (origin top-left).\n"
-    'Reply with JSON only: {"spans": [{"text": "...", "box": [x0, y0, x1, y1]}]}'
+    'Reply with JSON only: {{"spans": [{{"text": "...", "box": {box}}}]}}'
 )
+
+
+def _yx_boxes() -> bool:
+    # Gemini is trained on [ymin, xmin, ymax, xmax] and returns that order even when asked otherwise.
+    return settings.ocr_model.startswith("google/")
 
 
 def _png_size(png: bytes) -> tuple[int, int]:
@@ -133,7 +138,7 @@ def _recognize_openrouter(png: bytes) -> list[dict]:
             "response_format": {"type": "json_object"},
             "messages": [{"role": "user", "content": [
                 {"type": "image_url", "image_url": {"url": url}},
-                {"type": "text", "text": _PROMPT},
+                {"type": "text", "text": _PROMPT.format(box="[ymin, xmin, ymax, xmax]" if _yx_boxes() else "[x0, y0, x1, y1]")},
             ]}],
         })
     except ModelUnavailable as e:
@@ -146,13 +151,16 @@ def _recognize_openrouter(png: bytes) -> list[dict]:
     for it in items:
         if not isinstance(it, dict):
             continue
-        text, box = str(it.get("text", "")).strip(), it.get("box") or it.get("bbox")
+        # Gemini sometimes names the text field "label" (its detection format).
+        text, box = str(it.get("text") or it.get("label") or "").strip(), it.get("box") or it.get("bbox")
         if not text or not isinstance(box, list) or len(box) != 4:
             continue
         try:
             x0, y0, x1, y1 = (min(max(float(v), 0.0), 1000.0) for v in box)
         except (TypeError, ValueError):
             continue
+        if _yx_boxes():
+            x0, y0, x1, y1 = y0, x0, y1, x1
         x0, x1 = sorted((x0, x1))
         y0, y1 = sorted((y0, y1))
         spans.append({
