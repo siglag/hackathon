@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import DOMPurify from "dompurify";
-import { marked } from "marked";
 import { get, newKey, post } from "../api";
+import { renderMarkdown, sanitize } from "../markdown";
 import type { Artifact, Dataset, Doc, Selection } from "../types";
 import type { Items } from "../App";
 import TableView from "./TableView";
@@ -31,7 +30,7 @@ const fmtTime = (t: number) => new Date(t * 1000).toLocaleString();
 function Overview({ items, onSelect }: { items: Items; onSelect: (s: Selection) => void }) {
   return (
     <div className="panel-inner overview">
-      <h3>Files ({items.artifacts.length})</h3>
+      <h3>Generated files <span>{items.artifacts.length}</span></h3>
       {items.artifacts.length === 0 && <p className="muted small">Generated files appear here.</p>}
       <ul className="items">
         {items.artifacts.map((a) => (
@@ -41,7 +40,7 @@ function Overview({ items, onSelect }: { items: Items; onSelect: (s: Selection) 
           </li>
         ))}
       </ul>
-      <h3>Datasets ({items.datasets.length})</h3>
+      <h3>Datasets <span>{items.datasets.length}</span></h3>
       <ul className="items">
         {items.datasets.map((d) => (
           <li key={d.id} onClick={() => onSelect({ type: "dataset", id: d.id })}>
@@ -50,7 +49,8 @@ function Overview({ items, onSelect }: { items: Items; onSelect: (s: Selection) 
           </li>
         ))}
       </ul>
-      <h3>Records ({items.documents.length})</h3>
+      <h3>Source records <span>{items.documents.length}</span></h3>
+      {items.documents.length === 0 && <p className="muted small">Uploaded and scanned records appear here.</p>}
       <ul className="items">
         {items.documents.map((d) => (
           <li key={d.id} onClick={() => onSelect(d.extraction_state && d.extraction_state !== "reviewed" ? { type: "review", id: d.id } : { type: "document", id: d.id })}>
@@ -172,7 +172,7 @@ function ArtifactView({ id, onSelect }: { id: string; onSelect: (s: Selection) =
         </div>
       )}
       {p.kind === "report" && a.format === "md" && p.markdown && (
-        <div className="report" dangerouslySetInnerHTML={{ __html: sanitize(marked.parse(p.markdown, { async: false }) as string) }} />
+        <div className="report" dangerouslySetInnerHTML={{ __html: renderMarkdown(p.markdown) }} />
       )}
       {p.kind === "report" && a.format !== "md" && p.html && (
         <>
@@ -184,17 +184,6 @@ function ArtifactView({ id, onSelect }: { id: string; onSelect: (s: Selection) =
   );
 }
 
-function sanitize(html: string): string {
-  // External links open only on click, without referrer; no remote images.
-  const clean = DOMPurify.sanitize(html, { FORBID_TAGS: ["img", "iframe", "style", "form", "video", "audio", "object", "embed"], FORBID_ATTR: ["style", "srcset"] });
-  const div = document.createElement("div");
-  div.innerHTML = clean;
-  div.querySelectorAll("a").forEach((el) => {
-    el.setAttribute("target", "_blank");
-    el.setAttribute("rel", "noopener noreferrer");
-  });
-  return div.innerHTML;
-}
 
 function DocumentView({ id, onSelect, onChanged }: { id: string; onSelect: (s: Selection) => void; onChanged: () => void }) {
   const [d, setD] = useState<any>(null);

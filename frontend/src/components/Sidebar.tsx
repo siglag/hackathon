@@ -22,7 +22,10 @@ export default function Sidebar(p: Props) {
 
   return (
     <nav className="sidebar">
-      <div className="brand">Medical Assistant <span className="badge local">local</span></div>
+      <div className="brand">
+        <span className="brand-name">Medical Assistant</span>
+        <span className="brand-sub">Local workstation</span>
+      </div>
       <form
         className="new-case"
         onSubmit={async (e) => {
@@ -37,9 +40,11 @@ export default function Sidebar(p: Props) {
       </form>
       <div className="section-title">Cases</div>
       <ul className="list">
-        {p.cases.map((c) => (
+        {p.cases.map((c, i) => (
           <li key={c.id} className={c.id === p.activeCaseId ? "active" : ""}>
-            <button className="link" onClick={() => p.onSelectCase(c.id)}>{c.label}</button>
+            <button className="link" onClick={() => p.onSelectCase(c.id)} title={c.label}>
+              <span className="idx">{String(i + 1).padStart(2, "0")}</span>{c.label}
+            </button>
             {c.id === p.activeCaseId && (
               confirmDelete === c.id ? (
                 <span className="confirm">
@@ -68,14 +73,14 @@ export default function Sidebar(p: Props) {
           <ul className="list">
             {p.conversations.map((c) => (
               <li key={c.id} className={c.id === p.activeConvId ? "active" : ""}>
-                <button className="link" onClick={() => p.onSelectConv(c.id)}>{c.title}</button>
+                <button className="link" onClick={() => p.onSelectConv(c.id)} title={c.title}>{c.title}</button>
               </li>
             ))}
           </ul>
         </>
       )}
       <div className="grow" />
-      <button className="link muted" onClick={p.onLogout}>Sign out</button>
+      <button className="link signout" onClick={p.onLogout}>Sign out</button>
     </nav>
   );
 }

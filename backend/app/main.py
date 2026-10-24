@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from . import artifacts, auth, datasets, db, jobs, netguard, pipeline, storage
-from .agent import ollama
+from .agent import llm
 from .audit import audit
 from .auth import Principal, owned, require_case
 from .config import settings
@@ -29,8 +29,16 @@ log = logging.getLogger("medassist.api")
 async def lifespan(_: FastAPI):
     db.init_db()
     jobs.recover_after_restart()
+    if settings.llm_provider == "openrouter" and not settings.allow_cloud_model:
+        raise RuntimeError("MEDASSIST_LLM_PROVIDER=openrouter sends case content to a cloud model; "
+                           "set MEDASSIST_ALLOW_CLOUD_MODEL=1 to confirm (synthetic data only).")
+    if settings.ocr_engine == "openrouter" and not settings.allow_cloud_model:
+        raise RuntimeError("MEDASSIST_OCR_ENGINE=openrouter sends page images to a cloud model; "
+                           "set MEDASSIST_ALLOW_CLOUD_MODEL=1 to confirm (synthetic data only).")
     if settings.network_guard:
-        netguard.install(settings.ollama_url, settings.gateway_url)
+        uses_cloud = "openrouter" in (settings.llm_provider, settings.ocr_engine)
+        cloud = ["https://openrouter.ai"] if uses_cloud else []
+        netguard.install(settings.ollama_url, settings.gateway_url, *cloud)
     log.info("started data_dir_set=%s model=%s", bool(settings.data_dir), settings.model)
     yield
 
@@ -111,7 +119,7 @@ def system_status(p: Principal = Doctor):
             gw = c.get("/v1/health", headers={"X-Gateway-Key": settings.gateway_secret()}).json()
     except Exception as e:  # noqa: BLE001
         gw = {"ok": False, "error": type(e).__name__}
-    return {"model": ollama.status(), "ocr": {"ok": ok, "engine": eng}, "gateway": gw, "agent": settings.agent_backend,
+    return {"model": llm.status(), "ocr": {"ok": ok, "engine": eng}, "gateway": gw, "agent": settings.agent_backend,
             "limits": {"upload_mb": settings.max_upload_bytes // 2**20, "pdf_pages": settings.max_pdf_pages,
                        "sheet_rows": settings.max_sheet_rows}, "retention_days": settings.retention_days or None}
 
@@ -145,7 +153,7 @@ def create_case(body: CaseIn, p: Principal = Doctor):
           (cid, p.user_id, body.label.strip(), body.retention_policy, now(), now()))
     conv = new_id("conv")
     db.ex("INSERT INTO conversations(id, case_id, title, model, runtime_version, created_at) VALUES (?,?,?,?,?,?)",
-          (conv, cid, "Conversation 1", settings.model, f"{settings.agent_backend}", now()))
+          (conv, cid, "Conversation 1", llm.model_label(), f"{settings.agent_backend}/{settings.llm_provider}", now()))
     audit(p.actor, "case.create", cid, [cid])
     return {"id": cid, "conversation_id": conv}
 
@@ -186,7 +194,7 @@ def create_conversation(case_id: str, p: Principal = Doctor):
     n = db.q1("SELECT COUNT(*) n FROM conversations WHERE case_id=?", (case_id,))["n"]
     cid = new_id("conv")
     db.ex("INSERT INTO conversations(id, case_id, title, model, runtime_version, created_at) VALUES (?,?,?,?,?,?)",
-          (cid, case_id, f"Conversation {n + 1}", settings.model, settings.agent_backend, now()))
+          (cid, case_id, f"Conversation {n + 1}", llm.model_label(), f"{settings.agent_backend}/{settings.llm_provider}", now()))
     return {"id": cid}
 
 

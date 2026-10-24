@@ -32,6 +32,18 @@ if [ ! -f "$ROOT/frontend/dist/index.html" ]; then
   (cd "$ROOT/frontend" && npm run build >/dev/null)
 fi
 
+# Branch deepseek-openrouter: DeepSeek V4.1 Flash 1017 via OpenRouter replaces local Qwen.
+# This sends case content to a cloud provider. Use synthetic data. Set LLM=ollama to go back.
+if [ "${LLM:-openrouter}" = "openrouter" ]; then
+  export MEDASSIST_LLM_PROVIDER=openrouter MEDASSIST_ALLOW_CLOUD_MODEL=1
+  echo "WARNING: cloud model ${MEDASSIST_OPENROUTER_MODEL:-deepseek/deepseek-v4.1-flash-1017} — case content is sent to OpenRouter." >&2
+fi
+# OCR via an OpenRouter vision model replaces local PaddleOCR. Set OCR=paddle to go back.
+if [ "${OCR:-openrouter}" = "openrouter" ]; then
+  export MEDASSIST_OCR_ENGINE=openrouter MEDASSIST_ALLOW_CLOUD_MODEL=1
+  echo "WARNING: cloud OCR ${MEDASSIST_OCR_MODEL:-google/gemini-3.8-flash} — page images are sent to OpenRouter." >&2
+fi
+
 cd "$ROOT/backend"
 # Create the API<->gateway shared secret once, before either process starts.
 "$PY" -c "from app.config import settings; settings.gateway_secret()"

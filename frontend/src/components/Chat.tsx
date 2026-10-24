@@ -120,10 +120,23 @@ export default function Chat({ caseId, conversationId, items, onItemsChanged, on
     >
       <div className="messages">
         {messages.length === 0 && (
-          <div className="empty muted">
-            <p>Drop records here (photo, PDF, XLSX, CSV, JSON) or use <em>Scan with phone</em>.</p>
-            <p>Try: “Create an Excel sheet from the reviewed labs”, “Sort by collection date”, or a medical question —
-              literature searches need your approval and never include patient details.</p>
+          <div className="empty">
+            <h2>Nothing logged yet</h2>
+            <p>This case has no conversation yet. The usual order:</p>
+            <ol>
+              <li><span className="n">01</span><div><strong>Add records</strong>
+                <span className="d">Drop a photo, PDF, XLSX, CSV or JSON here, or use “Scan with phone” above.</span></div></li>
+              <li><span className="n">02</span><div><strong>Review the extraction</strong>
+                <span className="d">Check medication names, doses, lab values, units and dates before you use them.</span></div></li>
+              <li><span className="n">03</span><div><strong>Ask or export</strong>
+                <span className="d">Literature searches show you the outgoing topic first and never include patient details.</span></div></li>
+            </ol>
+            <div className="try">
+              <span className="muted small">Try</span>
+              {["Create an Excel sheet from the reviewed labs", "Sort by collection date"].map((s) => (
+                <button key={s} className="chip link" onClick={() => setText(s)}>{s}</button>
+              ))}
+            </div>
           </div>
         )}
         {messages.map((m) => (
@@ -160,30 +173,36 @@ export default function Chat({ caseId, conversationId, items, onItemsChanged, on
         <div ref={bottom} />
       </div>
       {error && <div className="error">{error}</div>}
-      <div className="composer">
-        <label className="button attach" title="Attach files">
-          +
-          <input type="file" multiple hidden accept=".jpg,.jpeg,.png,.pdf,.xlsx,.csv,.tsv,.json,image/*"
-            onChange={(e) => {
-              upload(Array.from(e.target.files ?? []));
-              e.target.value = "";
-            }} />
-        </label>
-        <textarea
-          value={text}
-          placeholder="Ask about this case's records, or request a table/file…"
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              sendMessage();
-            }
-          }}
-          rows={2}
-        />
-        <button className="primary" onClick={sendMessage} disabled={!text.trim()}>Send</button>
+      <div className="composer-wrap">
+        {uploading !== null && <div className="upload-bar"><div style={{ width: `${Math.round(uploading * 100)}%` }} /></div>}
+        <div className="composer">
+          <textarea
+            value={text}
+            placeholder="Ask about this case's records, or request a table or file"
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            rows={2}
+          />
+          <div className="composer-foot">
+            <label className="button attach" title="Attach files">
+              Attach records
+              <input type="file" multiple hidden accept=".jpg,.jpeg,.png,.pdf,.xlsx,.csv,.tsv,.json,image/*"
+                onChange={(e) => {
+                  upload(Array.from(e.target.files ?? []));
+                  e.target.value = "";
+                }} />
+            </label>
+            <span className="grow" />
+            <span className="hint"><kbd>Enter</kbd> send · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line</span>
+            <button className="primary small" onClick={sendMessage} disabled={!text.trim()}>Send</button>
+          </div>
+        </div>
       </div>
-      {uploading !== null && <div className="upload-bar"><div style={{ width: `${Math.round(uploading * 100)}%` }} /></div>}
     </section>
   );
 }

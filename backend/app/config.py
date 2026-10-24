@@ -39,6 +39,10 @@ class Settings:
     think: bool = field(default_factory=lambda: _env_bool("THINK", True))
     # JSON tasks use a raw Qwen prompt with an empty <think> block (no reasoning).
     raw_json_no_think: bool = field(default_factory=lambda: _env_bool("RAW_JSON_NO_THINK", True))
+    # Provider: "ollama" (local, default) or "openrouter" (CLOUD, experimental; sends case content off-site).
+    llm_provider: str = field(default_factory=lambda: _env("LLM_PROVIDER", "ollama"))
+    allow_cloud_model: bool = field(default_factory=lambda: _env_bool("ALLOW_CLOUD_MODEL", False))
+    openrouter_model: str = field(default_factory=lambda: _env("OPENROUTER_MODEL", "deepseek/deepseek-v4.1-flash-1017"))
     agent_backend: str = field(default_factory=lambda: _env("AGENT_BACKEND", "local"))  # local | hermes
     agent_max_steps: int = field(default_factory=lambda: _env_int("AGENT_MAX_STEPS", 6))
 
@@ -71,9 +75,17 @@ class Settings:
     network_guard: bool = field(default_factory=lambda: _env_bool("NETWORK_GUARD", True))
 
     # OCR
-    ocr_engine: str = field(default_factory=lambda: _env("OCR_ENGINE", "paddle"))  # paddle | none
+    ocr_engine: str = field(default_factory=lambda: _env("OCR_ENGINE", "paddle"))  # paddle | openrouter (CLOUD) | none
+    # Vision model for OCR_ENGINE=openrouter. google/* models are read as [ymin, xmin, ymax, xmax] boxes;
+    # others as [x0, y0, x1, y1]. Both normalized 0-1000.
+    ocr_model: str = field(default_factory=lambda: _env("OCR_MODEL", "google/gemini-3.8-flash"))
+    ocr_max_tokens: int = field(default_factory=lambda: _env_int("OCR_MAX_TOKENS", 16000))
     ocr_lang: str = field(default_factory=lambda: _env("OCR_LANG", "en"))
     ocr_structure: bool = field(default_factory=lambda: _env_bool("OCR_STRUCTURE", False))
+    # Memory bounds: full-resolution phone photos make Paddle's CPU detector use several GB.
+    # 2400 px on the long side is ~200 dpi for an A4 page, enough for printed records.
+    ocr_max_side: int = field(default_factory=lambda: _env_int("OCR_MAX_SIDE", 2400))
+    ocr_det_side: int = field(default_factory=lambda: _env_int("OCR_DET_SIDE", 1600))
 
     # Reports
     pdf_font_path: str = field(default_factory=lambda: _env("PDF_FONT", ""))
@@ -89,6 +101,14 @@ class Settings:
     @property
     def files_dir(self) -> Path:
         return self.data_dir / "files"
+
+    def openrouter_api_key(self) -> str:
+        """From the environment or an owner-only file in the data dir; never from the repo."""
+        env = os.environ.get("MEDASSIST_OPENROUTER_API_KEY")
+        if env:
+            return env.strip()
+        p = self.data_dir / "openrouter.key"
+        return p.read_text().strip() if p.exists() else ""
 
     def gateway_secret(self) -> str:
         """Shared secret authenticating the API to the local gateway."""

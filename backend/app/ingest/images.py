@@ -106,6 +106,11 @@ def normalize(data: bytes, rotate_deg: int = 0) -> Normalized:
         k = {90: cv2.ROTATE_90_CLOCKWISE, 180: cv2.ROTATE_180, 270: cv2.ROTATE_90_COUNTERCLOCKWISE}[rotate_deg % 360]
         bgr = cv2.rotate(bgr, k)
         ops.append(f"rotated_{rotate_deg % 360}")
+    h, w = bgr.shape[:2]
+    if max(h, w) > settings.ocr_max_side:
+        s = settings.ocr_max_side / max(h, w)
+        bgr = cv2.resize(bgr, (round(w * s), round(h * s)), interpolation=cv2.INTER_AREA)
+        ops.append(f"downscaled_{bgr.shape[1]}x{bgr.shape[0]}")
     warped = _perspective(bgr)
     if warped is not None:
         bgr = warped

@@ -13,6 +13,27 @@ Desktop UI ─────────────┼─> API (FastAPI :8600) �
                         │               (the ONLY process with internet egress)
 ```
 
+## Branch `deepseek-openrouter` (experimental, CLOUD model)
+
+On this branch, `scripts/run.sh` replaces local Qwen with **DeepSeek V4.1 Flash 1017** (`deepseek/deepseek-v4.1-flash-1017`) via OpenRouter, and local PaddleOCR with the vision model **Gemini 3.8 Flash** (`google/gemini-3.8-flash`, set with `MEDASSIST_OCR_MODEL`). `qwen/qwen3-vl-235b-a22b-instruct` also works and is about 10x cheaper per page.
+
+The OCR model returns each text segment with a box normalized to 0-1000, so OCR boxes in the review UI and line/table rebuilding work as before. It reports no confidence score, so the "low recognition score" warning never fires. Review still applies to every clinically material field.
+
+> **This breaks the spec's core privacy rule (§4).** Every model call (record text, questions, extracted values, case data in prompts) and every scanned page image (including names and identifiers printed on it) goes to OpenRouter and the upstream provider. Use synthetic data only.
+
+Safeguards that remain:
+
+* The API refuses to start with `MEDASSIST_LLM_PROVIDER=openrouter` or `MEDASSIST_OCR_ENGINE=openrouter` unless `MEDASSIST_ALLOW_CLOUD_MODEL=1` is set. `run.sh` sets all three on this branch.
+* The UI shows a red "CLOUD MODEL" banner.
+* The egress guard allows only `openrouter.ai`, in addition to local addresses.
+* Requests ask OpenRouter for `data_collection: deny`. That is a routing policy, not a guarantee.
+* PDF text layers are still read locally; only pages without one are sent for OCR. Storage and the PubMed gateway still run locally, unchanged.
+
+The key is read from `MEDASSIST_OPENROUTER_API_KEY` or `~/.local/share/medassist/openrouter.key` (mode 600). It is never stored in the repo.
+Go back to local Qwen with `LLM=ollama scripts/run.sh`, and to local PaddleOCR with `OCR=paddle scripts/run.sh`.
+
+A/B harness: `backend/.venv/bin/python -I scripts/ab_test.py`. Results go to `ab_results/REPORT.md`.
+
 ## Quick start (WSL + Ollama on Windows)
 
 ```bash
@@ -107,7 +128,8 @@ All settings are `MEDASSIST_*` environment variables (`backend/app/config.py`), 
 * `GATEWAY_URL`, `MCP_URL`, `MCP_ALLOWED_HOSTS`.
 * `MAX_UPLOAD_MB`, `MAX_PDF_PAGES`, `MAX_SHEET_ROWS`, `MAX_DECOMPRESSED_MB`, `MAX_IMAGE_MEGAPIXELS`.
 * `RETAIN_CAPTURE_ORIGINALS`, `RETENTION_DAYS` (set per clinic policy), `SECURE_COOKIES`, `ALLOWED_ORIGINS`.
-* `OCR_ENGINE` (`paddle`|`none`), `OCR_LANG`.
+* `OCR_ENGINE` (`paddle`|`openrouter`|`none`), `OCR_LANG`, `OCR_MODEL` and `OCR_MAX_TOKENS` (cloud OCR only).
+* `OCR_MAX_SIDE` (default 2400): photos are downscaled to this long side before OCR. `OCR_DET_SIDE` (default 1600): text-detection input size. Both bound OCR memory use.
 
 ## Known limitations / not yet done
 

@@ -14,8 +14,13 @@ export default function StatusBar() {
     <span className={`status ${ok ? "ok" : "bad"}`} title={title}>{label}</span>
   );
   return (
-    <span className="row gap small">
-      {dot(s.model.ok, "Model", s.model.ok ? `${s.model.model} via local Ollama ${s.model.version ?? ""}` : "Local model unavailable")}
+    <span className="row gap wrap" style={{ gap: 14 }}>
+      {s.model.cloud && (
+        <span className="status alarm" title="Record text, questions and extracted values are sent to OpenRouter for this model.">
+          CLOUD MODEL · case content leaves this workstation
+        </span>
+      )}
+      {dot(s.model.ok, s.model.cloud ? "DeepSeek" : "Model", s.model.ok ? (s.model.cloud ? `${s.model.model} via OpenRouter (cloud)` : `${s.model.model} via local Ollama ${s.model.version ?? ""}`) : `Model unavailable: ${s.model.error ?? ""}`)}
       {dot(s.ocr.ok, "OCR", s.ocr.ok ? s.ocr.engine : `OCR unavailable: ${s.ocr.engine}`)}
       {dot(!!s.gateway.ok, "Evidence", s.gateway.ok ? `Gateway up · ${s.gateway.provider}` : "Evidence gateway offline; local work continues")}
     </span>
