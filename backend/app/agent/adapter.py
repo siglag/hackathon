@@ -27,7 +27,7 @@ from typing import Callable, Protocol
 from .. import db
 from ..config import settings
 from ..util import loads
-from . import ollama
+from . import llm
 from .tools import ToolContext, ToolError, execute, schemas
 
 DATA_TOOLS = ["read_document", "read_table", "propose_extraction", "transform_table", "create_artifact"]
@@ -108,7 +108,7 @@ class LocalToolAgent:
         for step in range(1, settings.agent_max_steps + 1):
             check_cancel()
             final_step = step == settings.agent_max_steps
-            reply = ollama.chat(msgs, tools=None if final_step else tool_defs, on_token=None)
+            reply = llm.chat(msgs, tools=None if final_step else tool_defs, on_token=None)
             calls = (reply.get("tool_calls") or [])[:3]  # every call sent back must get a tool result
             if not calls:
                 text = reply.get("content") or ""

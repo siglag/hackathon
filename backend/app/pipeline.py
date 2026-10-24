@@ -9,7 +9,7 @@ from typing import Any
 import httpx
 
 from . import artifacts, datasets, db, storage
-from .agent import ollama
+from .agent import llm
 from .agent.adapter import get_adapter
 from .audit import audit
 from .config import settings
@@ -35,7 +35,7 @@ def set_doc_state(doc_id: str, state: str, meta_update: dict | None = None) -> N
 
 
 def _model_chat_json():
-    return ollama.chat_json if ollama.status().get("ok") else None
+    return llm.chat_json if llm.status().get("ok") else None
 
 
 def save_extraction(doc: dict, canon: dict, schema: str = "lab_results") -> dict:
@@ -351,8 +351,8 @@ def evidence_answer(ctx: JobContext) -> dict:
     records = _reviewed_records(ctx.case_id)
     system, user = ans.build_prompt(question, passages, by_pmid, records)
     try:
-        draft = ollama.chat_json(system, user, max_tokens=1800)
-    except ollama.ModelUnavailable as e:
+        draft = llm.chat_json(system, user, max_tokens=1800)
+    except llm.ModelUnavailable as e:
         raise JobError(str(e)) from None
     except ValueError:
         draft = {}
@@ -419,7 +419,7 @@ def _classify(text: str) -> str:
     """
     heuristic_evidence = bool(policy.match_in_text(text)) and bool(_KNOWLEDGE_WORDS.search(text)) and not _DATA_WORDS.search(text)
     try:
-        r = ollama.chat_json(CLASSIFY_SYSTEM, text[:2000], max_tokens=50)
+        r = llm.chat_json(CLASSIFY_SYSTEM, text[:2000], max_tokens=50)
         intent = str(r.get("intent", "")).strip()
     except ValueError:
         intent = ""
@@ -433,7 +433,7 @@ def _classify(text: str) -> str:
 def _propose_topic(text: str) -> dict:
     candidates = policy.match_in_text(text)
     try:
-        r = ollama.chat_json(CONCEPT_SYSTEM, f"CANDIDATES: {candidates}\n\nQUESTION (local only): {text[:2000]}", max_tokens=200)
+        r = llm.chat_json(CONCEPT_SYSTEM, f"CANDIDATES: {candidates}\n\nQUESTION (local only): {text[:2000]}", max_tokens=200)
     except ValueError:
         r = {}
     concepts = [str(c) for c in (r.get("concepts") or []) if isinstance(c, (str, int))][:6]
@@ -464,9 +464,10 @@ def chat_turn(ctx: JobContext) -> dict:
                 db.ex("DELETE FROM datasets WHERE id=?", (c["id"],))
     ctx.on_cleanup(_rollback)
 
-    st = ollama.status()
+    st = llm.status()
     if not st.get("ok"):
-        raise JobError(f"The local model ({settings.model}) is not available. Start Ollama; no cloud model is used.")
+        raise JobError(f"The model ({llm.model_label()}) is not available: {st.get('error', 'not reachable')}. "
+                       "No other model is used as a fallback.")
     ctx.stage("generating", "Understanding the request")
     intent = _classify(text)
     ctx.emit("intent", {"intent": intent})
@@ -515,7 +516,8 @@ def chat_turn(ctx: JobContext) -> dict:
         res.text = (res.text.strip() + "\n\nCreated: " + "; ".join(facts) + ".").strip()
     _add_message(ctx.case_id, conv, "assistant", res.text or "(no reply)",
                  {"type": "agent", "tools": res.tool_events, "created": res.created, "steps": res.steps,
-                  "agent": f"{agent.name}/{agent.version}", "model": settings.model}, ctx.id)
+                  "agent": f"{agent.name}/{agent.version}", "model": llm.model_label(),
+                  "provider": llm.provider_name()}, ctx.id)
     created_this_turn.clear()  # success: keep outputs
     return {"intent": intent, "created": res.created, "steps": res.steps}
 
