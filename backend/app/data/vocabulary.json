@@ -1,0 +1,1439 @@
+{
+ "version": "starter-2026-10",
+ "note": "Administrator-maintained outbound allowlist. Only these general concepts may leave the workstation.",
+ "terms": [
+  {
+   "term": "type 2 diabetes",
+   "synonyms": [
+    "t2dm",
+    "type 2 diabetes mellitus",
+    "diabetes type 2"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "type 1 diabetes",
+   "synonyms": [
+    "t1dm",
+    "type 1 diabetes mellitus"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "diabetes mellitus",
+   "synonyms": [
+    "diabetes"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "gestational diabetes",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "prediabetes",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "hypertension",
+   "synonyms": [
+    "high blood pressure",
+    "htn"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "hypotension",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "chronic kidney disease",
+   "synonyms": [
+    "ckd",
+    "chronic renal disease"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "acute kidney injury",
+   "synonyms": [
+    "aki",
+    "acute renal failure"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "end-stage renal disease",
+   "synonyms": [
+    "esrd",
+    "kidney failure"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "heart failure",
+   "synonyms": [
+    "hf",
+    "congestive heart failure",
+    "chf"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "heart failure with reduced ejection fraction",
+   "synonyms": [
+    "hfref"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "heart failure with preserved ejection fraction",
+   "synonyms": [
+    "hfpef"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "atrial fibrillation",
+   "synonyms": [
+    "af",
+    "afib"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "coronary artery disease",
+   "synonyms": [
+    "cad",
+    "ischemic heart disease"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "myocardial infarction",
+   "synonyms": [
+    "mi",
+    "heart attack"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "stroke",
+   "synonyms": [
+    "cerebrovascular accident",
+    "cva"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "transient ischemic attack",
+   "synonyms": [
+    "tia"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "deep vein thrombosis",
+   "synonyms": [
+    "dvt"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "pulmonary embolism",
+   "synonyms": [
+    "pe"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "venous thromboembolism",
+   "synonyms": [
+    "vte"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "peripheral artery disease",
+   "synonyms": [
+    "pad"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "dyslipidemia",
+   "synonyms": [
+    "hyperlipidemia",
+    "high cholesterol"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "hypercholesterolemia",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "obesity",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "metabolic syndrome",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "nonalcoholic fatty liver disease",
+   "synonyms": [
+    "nafld",
+    "fatty liver",
+    "masld"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "cirrhosis",
+   "synonyms": [
+    "liver cirrhosis"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "hepatitis b",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "hepatitis c",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "asthma",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "chronic obstructive pulmonary disease",
+   "synonyms": [
+    "copd"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "pneumonia",
+   "synonyms": [
+    "community-acquired pneumonia"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "covid-19",
+   "synonyms": [
+    "sars-cov-2"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "influenza",
+   "synonyms": [
+    "flu"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "tuberculosis",
+   "synonyms": [
+    "tb"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "urinary tract infection",
+   "synonyms": [
+    "uti"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "sepsis",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "cellulitis",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "hiv infection",
+   "synonyms": [
+    "hiv"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "anemia",
+   "synonyms": [
+    "anaemia"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "iron deficiency anemia",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "vitamin d deficiency",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "vitamin b12 deficiency",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "hypothyroidism",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "hyperthyroidism",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "osteoporosis",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "osteoarthritis",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "rheumatoid arthritis",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "gout",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "systemic lupus erythematosus",
+   "synonyms": [
+    "lupus",
+    "sle"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "psoriasis",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "atopic dermatitis",
+   "synonyms": [
+    "eczema"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "migraine",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "epilepsy",
+   "synonyms": [
+    "seizure disorder"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "parkinson disease",
+   "synonyms": [
+    "parkinson's disease"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "alzheimer disease",
+   "synonyms": [
+    "alzheimer's disease"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "dementia",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "depression",
+   "synonyms": [
+    "major depressive disorder"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "anxiety disorder",
+   "synonyms": [
+    "anxiety"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "bipolar disorder",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "schizophrenia",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "insomnia",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "obstructive sleep apnea",
+   "synonyms": [
+    "osa",
+    "sleep apnea"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "gastroesophageal reflux disease",
+   "synonyms": [
+    "gerd",
+    "acid reflux"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "peptic ulcer disease",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "helicobacter pylori infection",
+   "synonyms": [
+    "h pylori"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "inflammatory bowel disease",
+   "synonyms": [
+    "ibd"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "crohn disease",
+   "synonyms": [
+    "crohn's disease"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "ulcerative colitis",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "irritable bowel syndrome",
+   "synonyms": [
+    "ibs"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "celiac disease",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "pancreatitis",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "hyperkalemia",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "hypokalemia",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "hyponatremia",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "hypercalcemia",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "breast cancer",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "prostate cancer",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "colorectal cancer",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "lung cancer",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "polycystic ovary syndrome",
+   "synonyms": [
+    "pcos"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "preeclampsia",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "pregnancy",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "benign prostatic hyperplasia",
+   "synonyms": [
+    "bph"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "diabetic retinopathy",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "diabetic nephropathy",
+   "synonyms": [
+    "diabetic kidney disease"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "diabetic foot ulcer",
+   "synonyms": [],
+   "category": "condition"
+  },
+  {
+   "term": "neuropathy",
+   "synonyms": [
+    "peripheral neuropathy"
+   ],
+   "category": "condition"
+  },
+  {
+   "term": "metformin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "insulin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "sglt2 inhibitors",
+   "synonyms": [
+    "sglt-2 inhibitors",
+    "sodium-glucose cotransporter 2 inhibitors",
+    "gliflozins"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "empagliflozin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "dapagliflozin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "canagliflozin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "glp-1 receptor agonists",
+   "synonyms": [
+    "glp1 agonists",
+    "glp-1 agonists"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "semaglutide",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "liraglutide",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "tirzepatide",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "dpp-4 inhibitors",
+   "synonyms": [
+    "gliptins"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "sitagliptin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "sulfonylureas",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "gliclazide",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "pioglitazone",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "statins",
+   "synonyms": [
+    "hmg-coa reductase inhibitors"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "atorvastatin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "rosuvastatin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "ezetimibe",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "pcsk9 inhibitors",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "ace inhibitors",
+   "synonyms": [
+    "angiotensin-converting enzyme inhibitors"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "lisinopril",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "ramipril",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "angiotensin receptor blockers",
+   "synonyms": [
+    "arbs"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "losartan",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "valsartan",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "sacubitril-valsartan",
+   "synonyms": [
+    "arni"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "beta blockers",
+   "synonyms": [
+    "beta-blockers"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "bisoprolol",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "metoprolol",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "carvedilol",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "calcium channel blockers",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "amlodipine",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "thiazide diuretics",
+   "synonyms": [
+    "thiazides"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "hydrochlorothiazide",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "chlorthalidone",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "loop diuretics",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "furosemide",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "spironolactone",
+   "synonyms": [
+    "mineralocorticoid receptor antagonists"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "finerenone",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "aspirin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "clopidogrel",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "ticagrelor",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "warfarin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "direct oral anticoagulants",
+   "synonyms": [
+    "doacs",
+    "noacs"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "apixaban",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "rivaroxaban",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "dabigatran",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "heparin",
+   "synonyms": [
+    "low molecular weight heparin",
+    "enoxaparin"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "levothyroxine",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "corticosteroids",
+   "synonyms": [
+    "glucocorticoids",
+    "steroids"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "prednisolone",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "inhaled corticosteroids",
+   "synonyms": [
+    "ics"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "salbutamol",
+   "synonyms": [
+    "albuterol"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "proton pump inhibitors",
+   "synonyms": [
+    "ppis"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "omeprazole",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "nsaids",
+   "synonyms": [
+    "non-steroidal anti-inflammatory drugs"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "ibuprofen",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "paracetamol",
+   "synonyms": [
+    "acetaminophen"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "opioids",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "tramadol",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "gabapentin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "pregabalin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "amoxicillin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "amoxicillin-clavulanate",
+   "synonyms": [
+    "co-amoxiclav"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "azithromycin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "doxycycline",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "ciprofloxacin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "nitrofurantoin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "ceftriaxone",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "vancomycin",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "antibiotics",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "ssris",
+   "synonyms": [
+    "selective serotonin reuptake inhibitors"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "sertraline",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "escitalopram",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "fluoxetine",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "antipsychotics",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "benzodiazepines",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "allopurinol",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "colchicine",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "methotrexate",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "bisphosphonates",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "alendronate",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "vitamin d supplementation",
+   "synonyms": [
+    "cholecalciferol"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "iron supplementation",
+   "synonyms": [
+    "oral iron"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "erythropoiesis-stimulating agents",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "potassium binders",
+   "synonyms": [],
+   "category": "drug"
+  },
+  {
+   "term": "vaccination",
+   "synonyms": [
+    "vaccines"
+   ],
+   "category": "drug"
+  },
+  {
+   "term": "dialysis",
+   "synonyms": [
+    "hemodialysis"
+   ],
+   "category": "procedure"
+  },
+  {
+   "term": "kidney transplantation",
+   "synonyms": [],
+   "category": "procedure"
+  },
+  {
+   "term": "percutaneous coronary intervention",
+   "synonyms": [
+    "pci"
+   ],
+   "category": "procedure"
+  },
+  {
+   "term": "coronary artery bypass grafting",
+   "synonyms": [
+    "cabg"
+   ],
+   "category": "procedure"
+  },
+  {
+   "term": "bariatric surgery",
+   "synonyms": [],
+   "category": "procedure"
+  },
+  {
+   "term": "colonoscopy",
+   "synonyms": [],
+   "category": "procedure"
+  },
+  {
+   "term": "mammography",
+   "synonyms": [],
+   "category": "procedure"
+  },
+  {
+   "term": "lifestyle intervention",
+   "synonyms": [
+    "lifestyle modification"
+   ],
+   "category": "procedure"
+  },
+  {
+   "term": "dietary intervention",
+   "synonyms": [
+    "diet"
+   ],
+   "category": "procedure"
+  },
+  {
+   "term": "exercise therapy",
+   "synonyms": [
+    "physical activity"
+   ],
+   "category": "procedure"
+  },
+  {
+   "term": "smoking cessation",
+   "synonyms": [],
+   "category": "procedure"
+  },
+  {
+   "term": "weight loss",
+   "synonyms": [],
+   "category": "procedure"
+  },
+  {
+   "term": "blood glucose monitoring",
+   "synonyms": [
+    "continuous glucose monitoring"
+   ],
+   "category": "procedure"
+  },
+  {
+   "term": "blood pressure monitoring",
+   "synonyms": [],
+   "category": "procedure"
+  },
+  {
+   "term": "screening",
+   "synonyms": [],
+   "category": "procedure"
+  },
+  {
+   "term": "hba1c",
+   "synonyms": [
+    "glycated hemoglobin",
+    "hemoglobin a1c"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "fasting plasma glucose",
+   "synonyms": [
+    "fasting glucose"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "serum creatinine",
+   "synonyms": [
+    "creatinine"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "estimated glomerular filtration rate",
+   "synonyms": [
+    "egfr",
+    "gfr"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "urine albumin-to-creatinine ratio",
+   "synonyms": [
+    "uacr",
+    "albuminuria"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "ldl cholesterol",
+   "synonyms": [
+    "ldl-c"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "hdl cholesterol",
+   "synonyms": [],
+   "category": "lab_test"
+  },
+  {
+   "term": "triglycerides",
+   "synonyms": [],
+   "category": "lab_test"
+  },
+  {
+   "term": "serum potassium",
+   "synonyms": [
+    "potassium"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "serum sodium",
+   "synonyms": [
+    "sodium"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "hemoglobin",
+   "synonyms": [
+    "haemoglobin"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "ferritin",
+   "synonyms": [],
+   "category": "lab_test"
+  },
+  {
+   "term": "tsh",
+   "synonyms": [
+    "thyroid stimulating hormone"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "alt",
+   "synonyms": [
+    "alanine aminotransferase"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "ast",
+   "synonyms": [
+    "aspartate aminotransferase"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "c-reactive protein",
+   "synonyms": [
+    "crp"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "procalcitonin",
+   "synonyms": [],
+   "category": "lab_test"
+  },
+  {
+   "term": "troponin",
+   "synonyms": [],
+   "category": "lab_test"
+  },
+  {
+   "term": "bnp",
+   "synonyms": [
+    "nt-probnp",
+    "natriuretic peptide"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "d-dimer",
+   "synonyms": [],
+   "category": "lab_test"
+  },
+  {
+   "term": "inr",
+   "synonyms": [
+    "international normalized ratio"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "vitamin d level",
+   "synonyms": [
+    "25-hydroxyvitamin d"
+   ],
+   "category": "lab_test"
+  },
+  {
+   "term": "uric acid",
+   "synonyms": [],
+   "category": "lab_test"
+  },
+  {
+   "term": "platelet count",
+   "synonyms": [],
+   "category": "lab_test"
+  },
+  {
+   "term": "mortality",
+   "synonyms": [
+    "death",
+    "all-cause mortality"
+   ],
+   "category": "outcome"
+  },
+  {
+   "term": "cardiovascular outcomes",
+   "synonyms": [
+    "major adverse cardiovascular events",
+    "mace"
+   ],
+   "category": "outcome"
+  },
+  {
+   "term": "cardiovascular mortality",
+   "synonyms": [],
+   "category": "outcome"
+  },
+  {
+   "term": "hospitalization",
+   "synonyms": [
+    "hospital admission"
+   ],
+   "category": "outcome"
+  },
+  {
+   "term": "kidney outcomes",
+   "synonyms": [
+    "renal outcomes",
+    "ckd progression"
+   ],
+   "category": "outcome"
+  },
+  {
+   "term": "hypoglycemia",
+   "synonyms": [
+    "hypoglycaemia"
+   ],
+   "category": "outcome"
+  },
+  {
+   "term": "adverse events",
+   "synonyms": [
+    "side effects",
+    "adverse effects"
+   ],
+   "category": "outcome"
+  },
+  {
+   "term": "drug interactions",
+   "synonyms": [
+    "drug-drug interactions"
+   ],
+   "category": "outcome"
+  },
+  {
+   "term": "dosing",
+   "synonyms": [
+    "dose adjustment",
+    "dosage"
+   ],
+   "category": "outcome"
+  },
+  {
+   "term": "renal dose adjustment",
+   "synonyms": [],
+   "category": "outcome"
+  },
+  {
+   "term": "efficacy",
+   "synonyms": [],
+   "category": "outcome"
+  },
+  {
+   "term": "safety",
+   "synonyms": [],
+   "category": "outcome"
+  },
+  {
+   "term": "quality of life",
+   "synonyms": [],
+   "category": "outcome"
+  },
+  {
+   "term": "glycemic control",
+   "synonyms": [],
+   "category": "outcome"
+  },
+  {
+   "term": "blood pressure control",
+   "synonyms": [],
+   "category": "outcome"
+  },
+  {
+   "term": "bleeding risk",
+   "synonyms": [
+    "bleeding"
+   ],
+   "category": "outcome"
+  },
+  {
+   "term": "fracture risk",
+   "synonyms": [],
+   "category": "outcome"
+  },
+  {
+   "term": "diagnosis",
+   "synonyms": [
+    "diagnostic accuracy"
+   ],
+   "category": "outcome"
+  },
+  {
+   "term": "prognosis",
+   "synonyms": [],
+   "category": "outcome"
+  },
+  {
+   "term": "prevention",
+   "synonyms": [],
+   "category": "outcome"
+  },
+  {
+   "term": "treatment",
+   "synonyms": [
+    "therapy",
+    "management"
+   ],
+   "category": "outcome"
+  },
+  {
+   "term": "contraindications",
+   "synonyms": [],
+   "category": "outcome"
+  }
+ ]
+}
