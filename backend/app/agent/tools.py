@@ -8,11 +8,13 @@ Results are bounded in size.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from .. import artifacts, datasets, db
-from ..util import loads
+from ..ingest import extraction
+from ..util import loads, now
 
 MAX_RESULT_CHARS = 6000
 
@@ -27,6 +29,7 @@ class ToolContext:
     conversation_id: str
     actor: str
     emit: Callable[[str, dict], None]
+    user_text: str = ""  # the doctor's message this turn; record values must appear in it literally
     created: list[dict] = field(default_factory=list)  # artifacts/datasets created this turn
     evidence_queries: list[str] = field(default_factory=list)
 
@@ -115,6 +118,91 @@ def create_artifact(ctx: ToolContext, dataset_id: str, format: str, title: str |
                     (" Contains UNREVIEWED values and is marked DRAFT." if a["review_state"] == "draft" else "")}
 
 
+MAX_RECORD_ROWS = 50
+
+
+def _in_message(raw: str, text: str) -> bool:
+    """True when ``raw`` occurs in the message as a whole token (so '1' does not match inside '12.1')."""
+    pat = r"(?<![0-9A-Za-z.])" + re.escape(raw) + r"(?![0-9A-Za-z])"
+    return re.search(pat, text, re.I) is not None
+
+
+def record_from_message(ctx: ToolContext, schema: str, rows: list[dict], append_to: str | None = None,
+                        label: str | None = None) -> dict:
+    if schema not in extraction.SCHEMAS:
+        raise ToolError(f"unknown schema '{schema}'")
+    if not isinstance(rows, list) or not rows:
+        raise ToolError("rows must be a non-empty list")
+    if len(rows) > MAX_RECORD_ROWS:
+        raise ToolError(f"at most {MAX_RECORD_ROWS} rows per call")
+    spec = extraction.SCHEMAS[schema]
+    fields = spec["row_fields"]
+    text = " ".join(ctx.user_text.split())
+    src = {"entered_in_chat": True, "conversation_id": ctx.conversation_id}
+    parent = None
+    if append_to is not None:
+        _case_row(ctx, "datasets", append_to)
+        parent = datasets.load(append_to)
+        missing_cols = [f for f in fields if f not in {c["name"] for c in parent["columns"]}]
+        if missing_cols:
+            raise ToolError(f"dataset {append_to} has no columns {missing_cols}; omit append_to to create a new dataset")
+    # Same rule as document extraction: the model may only map text the doctor
+    # wrote; a value not literally present in the message is rejected.
+    new_rows, issues = [], []
+    used_ids = {r["id"] for r in parent["rows"]} if parent else set()
+    for i, r in enumerate(rows):
+        if not isinstance(r, dict):
+            raise ToolError("each row must be an object")
+        unknown = set(r) - set(fields)
+        if unknown:
+            raise ToolError(f"row {i}: unknown fields {sorted(unknown)}; {schema} fields are {fields}")
+        cells: dict[str, dict] = {}
+        for f in fields:
+            raw = r.get(f)
+            raw = None if raw is None else " ".join(str(raw).split())
+            if raw and not _in_message(raw, text):
+                raise ToolError(f"row {i}: '{raw}' for {f} is not written in the doctor's message; "
+                                "copy values exactly as typed and leave missing ones null")
+            fd = extraction.make_field(raw, f, None, None, f in spec["critical"])
+            cell = {"v": fd["value"], "r": fd["raw_text"], "src": src, "rs": "unreviewed"}
+            if fd.get("comparator"):
+                cell["comparator"] = fd["comparator"]
+            if fd["issues"]:
+                cell["issues"] = fd["issues"]
+                issues += [f"row {i} {f}: {x}" for x in fd["issues"]]
+            cells[f] = cell
+        if all(c["v"] is None and c["r"] is None for c in cells.values()):
+            raise ToolError(f"row {i} has no values")
+        amount = cells["value" if schema == "lab_results" else "dose"]
+        if amount["v"] is not None and cells["unit"]["v"]:
+            amount["unit"] = cells["unit"]["v"]
+        n = len(used_ids)
+        while f"m{n}" in used_ids:
+            n += 1
+        used_ids.add(f"m{n}")
+        new_rows.append({"id": f"m{n}", "cells": cells})
+    from ..ingest.tabular import infer_type
+    cols = [dict(c) for c in parent["columns"]] if parent else [{"name": f, "type": "string"} for f in fields]
+    all_rows = (parent["rows"] if parent else []) + new_rows
+    for c in cols:
+        if not c.get("derived"):
+            c["type"] = infer_type([(r["cells"].get(c["name"]) or {}).get("v") for r in all_rows])
+    # Appending unreviewed rows makes the whole version a draft.
+    if parent:
+        ops = parent["transformations"] + [{"ops": [{"op": "append_rows", "source": "chat", "rows": [r["id"] for r in new_rows]}],
+                                            "at": now(), "parent": parent["id"]}]
+        did = datasets.create(ctx.case_id, label or parent["label"], cols, all_rows, parent["source_documents"], "draft",
+                              parent=parent, transformations=ops, meta=parent.get("meta"))
+    else:
+        did = datasets.create(ctx.case_id, label or f"{schema.replace('_', ' ').title()} entered in chat", cols, all_rows, [],
+                              "draft", meta={"entered_in_chat": True})
+    ctx.created.append({"type": "dataset", "id": did})
+    ctx.emit("dataset", {"dataset_id": did})
+    return {"dataset_id": did, "rows_added": len(new_rows), "row_count": len(all_rows), "review_state": "draft",
+            "issues": issues[:20],
+            "note": "Values entered in chat are UNREVIEWED until the doctor checks them in the table."}
+
+
 def propose_evidence_query(ctx: ToolContext, concepts: list[str], population: str | None = None,
                            study_types: list[str] | None = None, year_from: int | None = None, year_to: int | None = None) -> dict:
     from ..pipeline import create_evidence_query
@@ -161,6 +249,20 @@ CATALOG: dict[str, tuple[Callable, dict, str]] = {
                                          "format": {"type": "string", "enum": ["xlsx", "csv", "json", "docx", "pdf", "md"]},
                                          "title": {"type": "string"}}, "required": ["dataset_id", "format"]},
         "Create a downloadable file (Excel=xlsx, CSV, JSON, Word=docx, PDF, Markdown) from a dataset version."),
+    "record_from_message": (record_from_message, {
+        "type": "object", "properties": {
+            "schema": {"type": "string", "enum": ["lab_results", "medications"]},
+            "rows": {"type": "array", "items": {"type": "object", "properties": {
+                f: {"type": "string"} for f in dict.fromkeys(
+                    extraction.SCHEMAS["lab_results"]["row_fields"] + extraction.SCHEMAS["medications"]["row_fields"])}},
+                "description": "One object per result/medication. Copy each value EXACTLY as the doctor typed it; null if not given."},
+            "append_to": {"type": "string", "description": "Optional dataset ID to add the rows to (new version)"},
+            "label": {"type": "string"}},
+         "required": ["schema", "rows"]},
+        "Create a record from values the doctor typed in THIS message (e.g. 'Hb 12.1 g/dL on 2026-03-02'). "
+        "lab_results fields: test, value, unit, reference_range, flag, collection_date. "
+        "medications fields: medication, dose, unit, route, frequency, start_date. "
+        "Creates a new draft dataset, or a new version of append_to with the rows added."),
     "propose_evidence_query": (propose_evidence_query, {
         "type": "object", "properties": {
             "concepts": {"type": "array", "items": {"type": "string"}, "description": "1-4 GENERAL medical concepts; no names, ages, dates or IDs"},

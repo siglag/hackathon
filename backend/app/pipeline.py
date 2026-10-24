@@ -394,9 +394,10 @@ def _answer_text(r: dict) -> str:
 
 CLASSIFY_SYSTEM = (
     "Classify the doctor's message. Examples: 'Is metformin safe in CKD?' -> evidence_question; "
-    "'Make an Excel sheet of the labs' -> data_task; 'Sort by date' -> data_task; 'hello' -> other. intent is one of: "
+    "'Make an Excel sheet of the labs' -> data_task; 'Sort by date' -> data_task; "
+    "'Record these labs: Hb 12.1 g/dL, WBC 6.2 on 2026-03-02' -> data_task; 'hello' -> other. intent is one of: "
     "evidence_question (asks for medical knowledge: treatment, dosing, risks, guidelines, evidence, interpretation needing literature), "
-    "data_task (read records, extract, tables, sort/filter, create Excel/CSV/JSON/Word/PDF files), "
+    "data_task (read records, extract, tables, sort/filter, create Excel/CSV/JSON/Word/PDF files, record values typed in the message), "
     "other (greetings, app help). Return JSON {\"intent\": \"...\"}."
 )
 
@@ -409,7 +410,7 @@ CONCEPT_SYSTEM = (
 
 
 _DATA_WORDS = re.compile(r"\b(excel|xlsx|sheet|spreadsheet|table|csv|json|pdf|docx|word|file|export|sort|filter|column|row|"
-                         r"rename|extract|transcribe|scan|upload|dataset|report|summary of (?:the )?(?:labs|results|records))\b", re.I)
+                         r"rename|extract|transcribe|scan|upload|dataset|report|record|enter|summary of (?:the )?(?:labs|results|records))\b", re.I)
 _KNOWLEDGE_WORDS = re.compile(r"\b(should|recommend\w*|benefit\w*|effective\w*|efficacy|safe(?:ty)?|risk\w*|dos(?:e|ing|age)|"
                               r"first[- ]line|treat\w*|therap\w*|manage\w*|guideline\w*|evidence|contraindicat\w*|interact\w*|"
                               r"prognos\w*|diagnos\w*|indicat\w*|outcomes?|side effects?|adverse|prevent\w*|why|what causes)\b", re.I)

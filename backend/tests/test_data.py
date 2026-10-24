@@ -119,3 +119,36 @@ def test_upload_validation():
     with pytest.raises(validate.Rejected):
         validate.sniff(b"{not json", "x.json")
     assert validate.sniff(json.dumps([{"a": 1}]).encode(), "a.json").kind == "json"
+
+
+def test_record_from_message_only_accepts_typed_values():
+    from app.agent.tools import ToolContext, ToolError, execute
+
+    msg = "Record these: Hb 12.1 g/dL (ref 13.0-17.0) L, WBC 6,2 x10^9/L, collected 2026-03-02"
+    ctx = ToolContext("case_t", "conv_t", "agent", lambda *_: None, user_text=msg)
+    rows = [{"test": "Hb", "value": "12.1", "unit": "g/dL", "reference_range": "13.0-17.0", "flag": "L", "collection_date": "2026-03-02"},
+            {"test": "WBC", "value": "6,2", "unit": "x10^9/L", "collection_date": "2026-03-02"}]
+    out = json.loads(execute(ctx, "record_from_message", {"schema": "lab_results", "rows": rows}, ["record_from_message"]))
+    d = datasets.load(out["dataset_id"])
+    assert d["review_state"] == "draft" and out["rows_added"] == 2
+    hb, wbc = (r["cells"] for r in d["rows"])
+    assert hb["value"]["v"] == 12.1 and hb["value"]["unit"] == "g/dL" and hb["value"]["rs"] == "unreviewed"
+    assert wbc["value"]["v"] is None and wbc["value"]["r"] == "6,2"  # comma decimal never converted
+    assert wbc["reference_range"]["v"] is None  # not given: stays unknown
+    assert any("Comma decimal" in i for i in out["issues"])
+
+    # a value the doctor did not type (converted, invented, or a fragment of another number) is refused
+    for bad in ({"test": "Hb", "value": "121", "unit": "g/L"}, {"test": "Hb", "value": "1"}, {"test": "Na", "value": "140"}):
+        try:
+            execute(ctx, "record_from_message", {"schema": "lab_results", "rows": [bad]}, ["record_from_message"])
+            raise AssertionError(f"accepted {bad}")
+        except ToolError as e:
+            assert "not written" in str(e)
+
+    ctx2 = ToolContext("case_t", "conv_t", "agent", lambda *_: None, user_text="add Na 140 mmol/L")
+    out2 = json.loads(execute(ctx2, "record_from_message",
+                              {"schema": "lab_results", "rows": [{"test": "Na", "value": "140", "unit": "mmol/L"}],
+                               "append_to": out["dataset_id"]}, ["record_from_message"]))
+    d2 = datasets.load(out2["dataset_id"])
+    assert d2["version"] == 2 and d2["lineage_id"] == d["lineage_id"] and out2["row_count"] == 3
+    assert len({r["id"] for r in d2["rows"]}) == 3

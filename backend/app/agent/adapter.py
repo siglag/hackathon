@@ -30,7 +30,7 @@ from ..util import loads
 from . import llm
 from .tools import ToolContext, ToolError, execute, schemas
 
-DATA_TOOLS = ["read_document", "read_table", "propose_extraction", "transform_table", "create_artifact"]
+DATA_TOOLS = ["read_document", "read_table", "propose_extraction", "transform_table", "create_artifact", "record_from_message"]
 
 SYSTEM_PROMPT = """You are a local assistant for a doctor. You help read medical records, organize patient data into tables, and create files.
 
@@ -41,6 +41,7 @@ Rules:
 - Do not give clinical recommendations, dosing, or diagnoses from memory. If asked a medical knowledge question, say a literature search is needed.
 - Values marked unreviewed must be described as unreviewed.
 - To change a table (sort, filter, add a column, rename...), call transform_table, then create_artifact if a file is wanted.
+- When the doctor types results or medications into the message and asks to record them, call record_from_message. Copy each value exactly as typed (no unit conversion, no reformatting); leave anything not given as null. Use append_to to add them to an existing dataset with the same columns.
 - File formats: Excel = xlsx, Word = docx, PDF = pdf, CSV = csv, JSON = json. Use exactly the format the doctor asked for. Keep the final reply short: say what you did and which IDs were created."""
 
 
@@ -97,7 +98,7 @@ class LocalToolAgent:
     version = "1"
 
     def run_turn(self, case_id, conversation_id, user_text, emit, check_cancel, on_token=None) -> TurnResult:
-        ctx = ToolContext(case_id, conversation_id, "agent", emit)
+        ctx = ToolContext(case_id, conversation_id, "agent", emit, user_text=user_text)
         msgs = [{"role": "system", "content": SYSTEM_PROMPT + "\n\n" + case_inventory(case_id)}]
         msgs += history(conversation_id)
         if not msgs[-1:] or msgs[-1].get("content") != user_text:
