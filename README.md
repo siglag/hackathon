@@ -38,13 +38,14 @@ Configure the existing OpenRouter key as described above, then run:
 
 ```bash
 ./start.sh
-# For access from another device on the LAN:
-HOST=0.0.0.0 ./start.sh
+# To restrict access to this computer:
+HOST=127.0.0.1 ./start.sh
 ```
 
 The launcher prepares missing dependencies, checks the OpenRouter credentials,
 builds the frontend, prepares local PaddleOCR models using a synthetic image,
-and starts the evidence gateway and API. Open `http://127.0.0.1:8600`.
+and starts the evidence gateway and API. The API listens on all interfaces by default.
+Open `http://127.0.0.1:8600` locally or `http://<computer-LAN-IP>:8600` from another device.
 Press Ctrl+C to stop. Logs are in `~/.local/state/medassist` (override with
 `MEDASSIST_LOG_DIR`). `scripts/run.sh` is an alias for the same launcher.
 

@@ -14,7 +14,7 @@ umask 077
 export MEDASSIST_LLM_PROVIDER=openrouter MEDASSIST_ALLOW_CLOUD_MODEL=1
 export MEDASSIST_OPENROUTER_MODEL="${MEDASSIST_OPENROUTER_MODEL:-deepseek/deepseek-v4.1-flash-1017}"
 export MEDASSIST_GATEWAY_URL="${MEDASSIST_GATEWAY_URL:-http://127.0.0.1:8601}"
-HOST="${HOST:-127.0.0.1}"
+HOST="${HOST:-0.0.0.0}"
 PORT="${PORT:-8600}"
 LOGDIR="${MEDASSIST_LOG_DIR:-$HOME/.local/state/medassist}"
 PY="$ROOT/backend/.venv/bin/python"
